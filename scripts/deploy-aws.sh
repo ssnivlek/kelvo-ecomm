@@ -29,7 +29,7 @@ set -a; source "$ENV_FILE"; set +a
 # ── Validate required vars ────────────────────────────────────
 REQUIRED_VARS=(
   AWS_REGION AWS_ACCOUNT_ID DD_API_KEY DD_APP_KEY DD_SITE
-  DD_RUM_APPLICATION_ID DD_RUM_CLIENT_TOKEN EC2_KEY_PAIR_NAME
+  REACT_APP_DD_APPLICATION_ID REACT_APP_DD_CLIENT_TOKEN EC2_KEY_PAIR_NAME
   EC2_INSTANCE_TYPE JWT_SECRET RDS_PASSWORD
 )
 for var in "${REQUIRED_VARS[@]}"; do
@@ -67,8 +67,8 @@ $AWS_CMD cloudformation deploy \
     Environment="${ENVIRONMENT:-production}" \
     DatadogApiKey="${DD_API_KEY}" \
     DatadogAppKey="${DD_APP_KEY}" \
-    DatadogRumApplicationId="${DD_RUM_APPLICATION_ID}" \
-    DatadogRumClientToken="${DD_RUM_CLIENT_TOKEN}" \
+    DatadogRumApplicationId="${REACT_APP_DD_APPLICATION_ID}" \
+    DatadogRumClientToken="${REACT_APP_DD_CLIENT_TOKEN}" \
     DatadogSite="${DD_SITE}" \
     EC2KeyPairName="${EC2_KEY_PAIR_NAME}" \
     EC2InstanceType="${EC2_INSTANCE_TYPE}" \
@@ -236,8 +236,8 @@ echo "═══ [7/7] Building and deploying React frontend... ═══"
 cd "${PROJECT_ROOT}/frontend"
 
 cat > .env <<ENVEOF
-REACT_APP_DD_APPLICATION_ID=${DD_RUM_APPLICATION_ID}
-REACT_APP_DD_CLIENT_TOKEN=${DD_RUM_CLIENT_TOKEN}
+REACT_APP_DD_APPLICATION_ID=${REACT_APP_DD_APPLICATION_ID}
+REACT_APP_DD_CLIENT_TOKEN=${REACT_APP_DD_CLIENT_TOKEN}
 REACT_APP_DD_SITE=${DD_SITE}
 REACT_APP_DD_ENV=${ENVIRONMENT:-production}
 REACT_APP_ORDER_API=${ALB_URL}

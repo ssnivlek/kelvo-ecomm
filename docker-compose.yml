@@ -329,8 +329,8 @@ services:
       dockerfile: Dockerfile
     container_name: rum-shop-frontend
     environment:
-      - REACT_APP_DD_APPLICATION_ID=${DD_RUM_APPLICATION_ID:-rum-shop-app-id}
-      - REACT_APP_DD_CLIENT_TOKEN=${DD_RUM_CLIENT_TOKEN:-pub_rum_shop_client_token}
+      - REACT_APP_DD_APPLICATION_ID=${REACT_APP_DD_APPLICATION_ID:-rum-shop-app-id}
+      - REACT_APP_DD_CLIENT_TOKEN=${REACT_APP_DD_CLIENT_TOKEN:-pub_rum_shop_client_token}
       - REACT_APP_DD_SITE=${DD_SITE:-datadoghq.com}
       - REACT_APP_DD_ENV=${DD_ENV:-local}
       - REACT_APP_ORDER_API=http://localhost:8080

@@ -604,9 +604,9 @@ Docs:
 cp .env.local .env
 
 # 2. Open .env and set your Datadog values:
-#    DD_API_KEY          → from https://app.datadoghq.com/organization-settings/api-keys
-#    DD_RUM_APPLICATION_ID → from your RUM app page
-#    DD_RUM_CLIENT_TOKEN → from your RUM app page
+#    DD_API_KEY                  → from https://app.datadoghq.com/organization-settings/api-keys
+#    REACT_APP_DD_APPLICATION_ID → from your RUM app page
+#    REACT_APP_DD_CLIENT_TOKEN   → from your RUM app page
 
 # 3. Start everything
 docker-compose up -d
@@ -696,11 +696,11 @@ Docker Compose, `run-local.sh`, and `deploy-aws.sh` all read from `.env` in the 
 |----------|-----------------|
 | `DD_API_KEY` | [Organization Settings > API Keys](https://app.datadoghq.com/organization-settings/api-keys) |
 | `DD_APP_KEY` | [Organization Settings > Application Keys](https://app.datadoghq.com/organization-settings/application-keys) |
-| `DD_RUM_APPLICATION_ID` | [Digital Experience > RUM > your app](https://app.datadoghq.com/rum/application/create) |
-| `DD_RUM_CLIENT_TOKEN` | Same page as the Application ID above |
+| `REACT_APP_DD_APPLICATION_ID` | [Digital Experience > RUM > your app](https://app.datadoghq.com/rum/application/create) |
+| `REACT_APP_DD_CLIENT_TOKEN` | Same page as the Application ID above |
 | `DD_SITE` | Usually `datadoghq.com`. Other options: `datadoghq.eu`, `us3.datadoghq.com`, `us5.datadoghq.com`, `ap1.datadoghq.com` |
 
-The RUM values appear twice in `.env.local`: once as `DD_RUM_*` (for the Datadog Agent) and once as `REACT_APP_DD_*` (for the React build). The `REACT_APP_DD_*` vars reference the `DD_RUM_*` vars automatically, so you only need to set them once.
+The RUM values use the `REACT_APP_DD_` prefix because React requires it to inject environment variables at build time. The same values are also read by Docker Compose and deploy scripts for the Datadog Agent config.
 
 **AWS-only (only needed in `.env.aws`):**
 

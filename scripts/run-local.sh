@@ -3,7 +3,7 @@
 # RUM Shop - Run All Services Locally
 # ================================================================
 # Starts all backend services + frontend for local development.
-# Uses .env.local for configuration.
+# Uses .env for configuration (cp .env.local .env and fill in your values).
 #
 # Usage:
 #   ./scripts/run-local.sh          # Start all services
@@ -20,10 +20,12 @@ LOG_DIR="${PROJECT_ROOT}/.logs"
 mkdir -p "$PID_DIR" "$LOG_DIR"
 
 # ── Load config ───────────────────────────────────────────────
-ENV_FILE="${PROJECT_ROOT}/.env.local"
-if [[ -f "$ENV_FILE" ]]; then
-  set -a; source "$ENV_FILE"; set +a
+ENV_FILE="${PROJECT_ROOT}/.env"
+if [[ ! -f "$ENV_FILE" ]]; then
+  echo "ERROR: .env not found. Run:  cp .env.local .env  and fill in your values."
+  exit 1
 fi
+set -a; source "$ENV_FILE"; set +a
 
 # ── Colors ────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
