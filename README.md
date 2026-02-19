@@ -655,33 +655,64 @@ cp .env.aws .env
 
 ## Environment Variables
 
-| File | Usage |
-|------|-------|
-| `.env.local` | Local development (Docker Compose or `run-local.sh`) |
-| `.env.aws` | AWS deployment via `deploy-aws.sh` |
-| `frontend/.env.example` | React environment variable reference |
+### How it works
 
-### Required Datadog Values
+There are **three** env files in the repo. All of them are **templates** with placeholder values. None of them contain real secrets.
+
+```
+.env.local      ← template for local development (Docker Compose)
+.env.aws        ← template for AWS deployment
+.env.example    ← minimal quick reference
+```
+
+To use them:
+
+```bash
+# For local development:
+cp .env.local .env
+
+# For AWS deployment:
+cp .env.aws .env
+```
+
+Then open `.env` and replace all `<YOUR_...>` placeholders with your real values. The `.env` file is **git-ignored** — your secrets never get committed.
+
+Docker Compose, `run-local.sh`, and `deploy-aws.sh` all read from `.env` in the project root automatically.
+
+### Which file has what
+
+| File | Git tracked? | Contains secrets? | Used by |
+|------|:------------:|:-----------------:|---------|
+| `.env.local` | Yes | No (placeholders only) | Template — copy to `.env` for local dev |
+| `.env.aws` | Yes | No (placeholders only) | Template — copy to `.env` for AWS deploy |
+| `.env.example` | Yes | No (placeholders only) | Minimal quick reference |
+| `.env` | **No** (git-ignored) | **Yes** (your real values) | Docker Compose, scripts, builds |
+
+### Variables you need to fill in
+
+**Datadog (required for both local and AWS):**
 
 | Variable | Where to get it |
 |----------|-----------------|
 | `DD_API_KEY` | [Organization Settings > API Keys](https://app.datadoghq.com/organization-settings/api-keys) |
 | `DD_APP_KEY` | [Organization Settings > Application Keys](https://app.datadoghq.com/organization-settings/application-keys) |
 | `DD_RUM_APPLICATION_ID` | [Digital Experience > RUM > your app](https://app.datadoghq.com/rum/application/create) |
-| `DD_RUM_CLIENT_TOKEN` | Same page as Application ID |
+| `DD_RUM_CLIENT_TOKEN` | Same page as the Application ID above |
 | `DD_SITE` | Usually `datadoghq.com`. Other options: `datadoghq.eu`, `us3.datadoghq.com`, `us5.datadoghq.com`, `ap1.datadoghq.com` |
 
-### AWS-Specific Values
+The RUM values appear twice in `.env.local`: once as `DD_RUM_*` (for the Datadog Agent) and once as `REACT_APP_DD_*` (for the React build). The `REACT_APP_DD_*` vars reference the `DD_RUM_*` vars automatically, so you only need to set them once.
+
+**AWS-only (only needed in `.env.aws`):**
 
 | Variable | What it is |
 |----------|------------|
 | `AWS_REGION` | AWS region to deploy to (e.g. `us-east-1`) |
-| `AWS_ACCOUNT_ID` | Your 12-digit AWS account ID |
-| `EC2_KEY_PAIR_NAME` | Name of an existing EC2 key pair for SSH |
-| `JWT_SECRET` | Any random string (used to sign auth tokens). Generate one: `openssl rand -hex 32` |
-| `RDS_PASSWORD` | Password for the `rumshop` PostgreSQL user on RDS. Choose something strong. |
+| `AWS_ACCOUNT_ID` | Your 12-digit AWS account ID (find it in the AWS console top-right menu) |
+| `EC2_KEY_PAIR_NAME` | Name of an existing EC2 key pair for SSH access ([create one here](https://console.aws.amazon.com/ec2/home#KeyPairs:)) |
+| `JWT_SECRET` | Any random string for signing auth tokens. Generate one: `openssl rand -hex 32` |
+| `RDS_PASSWORD` | Password for the `rumshop` PostgreSQL user on RDS. Minimum 8 characters. |
 
-**No API keys, application keys, or tokens are hardcoded anywhere.** All sensitive values are loaded from environment variables at build/runtime.
+**No API keys, application keys, or tokens are hardcoded anywhere in the code.** All sensitive values are loaded from environment variables at build/runtime.
 
 ---
 
