@@ -36,26 +36,25 @@ Parameters:
 
   EC2InstanceType:
     Type: String
-    Default: m5.xlarge
+    Default: t3.large
     Description: >
-      INTENTIONALLY OVERSIZED for FinOps demo.
-      App needs t3.small. m5.xlarge (4 vCPU, 16 GB) lets Datadog
-      Cloud Cost Management recommend right-sizing.
-    AllowedValues: [m5.large, m5.xlarge, m5.2xlarge, c5.xlarge, r5.large]
+      Oversized for FinOps demo. App needs t3.small (2 vCPU, 2 GB).
+      t3.large (2 vCPU, 8 GB) is 4x memory for Datadog to flag.
+    AllowedValues: [t3.medium, t3.large, m5.large, c5.large]
 
   FargateCpu:
     Type: String
-    Default: '1024'
+    Default: '512'
     Description: >
-      INTENTIONALLY OVERSIZED. Services need 256. Using 1024 for FinOps.
-    AllowedValues: ['256', '512', '1024', '2048']
+      Oversized for FinOps. Services need 256 CPU. Using 512 for Datadog to flag.
+    AllowedValues: ['256', '512', '1024']
 
   FargateMemory:
     Type: String
-    Default: '2048'
+    Default: '1024'
     Description: >
-      INTENTIONALLY OVERSIZED. Services need 512 MB. Using 2048 MB for FinOps.
-    AllowedValues: ['512', '1024', '2048', '4096']
+      Oversized for FinOps. Services need 512 MB. Using 1024 MB for Datadog to flag.
+    AllowedValues: ['512', '1024', '2048']
 
   JwtSecret:
     Type: String
@@ -271,7 +270,7 @@ Resources:
   # ────────────────────────────────────────────────────────────
   # EC2 — Java Order Service (OVERSIZED for FinOps)
   # ────────────────────────────────────────────────────────────
-  # Actual need: t3.small (~$15/mo). Deployed: m5.xlarge (~$140/mo).
+  # Actual need: t3.small (~$15/mo). Deployed: t3.large (~$60/mo).
   # Datadog Cloud Cost → Recommendations will flag this.
   OrderServiceInstance:
     Type: AWS::EC2::Instance
@@ -950,9 +949,9 @@ Outputs:
     Value: !Ref CDN
   FinOpsNotes:
     Value: !Sub >
-      EC2: ${EC2InstanceType} (ideal t3.small, ~$125/mo savings) |
-      ECS x3: ${FargateCpu}/${FargateMemory} (ideal 256/512, ~$81/mo savings) |
-      Total waste: ~$206/mo
+      EC2: ${EC2InstanceType} (ideal t3.small, ~$45/mo savings) |
+      ECS x3: ${FargateCpu}/${FargateMemory} (ideal 256/512, ~$27/mo savings) |
+      Total waste: ~$72/mo
   LambdaRemoteInstrumentation:
     Value: !Sub >
       Lambda functions deployed WITHOUT Datadog layers.
