@@ -48,7 +48,7 @@ export function HomePage() {
         >
           <h1>Premium Products, Exceptional Experience</h1>
           <p className="hero-tagline">
-            Discover curated quality at RUM Shop. From electronics to lifestyle — we've got you covered.
+            Discover curated quality at Kelvo E-Comm. From electronics to lifestyle — we've got you covered.
           </p>
           <Link to="/products" className="btn btn-primary hero-cta">
             Shop Now

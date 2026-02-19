@@ -1,7 +1,7 @@
 version: '3.9'
 
 # ================================================================
-# RUM Shop - Docker Compose (Local Development)
+# Kelvo E-Comm - Docker Compose (Local Development)
 # ================================================================
 # Databases: PostgreSQL (orders, users) + Redis (carts, payments)
 # Datadog Agent uses UDS (Unix Domain Sockets) via /var/run/datadog

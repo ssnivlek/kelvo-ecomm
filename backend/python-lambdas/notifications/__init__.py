@@ -1,1 +1,1 @@
-"""RUM Shop Order Notification Lambda."""
+"""Kelvo E-Comm Order Notification Lambda."""

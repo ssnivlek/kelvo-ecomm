@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ================================================================
-# RUM Shop - Run Locally with Docker
+# Kelvo E-Comm - Run Locally with Docker
 # ================================================================
 # Starts ALL services (backends + databases + frontend) using
 # Docker Compose. No local Java, Node, or Python needed.
@@ -58,14 +58,14 @@ fi
 # ── Commands ──────────────────────────────────────────────────
 case "${1:-start}" in
   stop)
-    echo -e "${YELLOW}Stopping all RUM Shop containers...${NC}"
+    echo -e "${YELLOW}Stopping all Kelvo E-Comm containers...${NC}"
     docker compose down
     echo -e "${GREEN}All services stopped.${NC}"
     exit 0
     ;;
   status)
     echo ""
-    echo -e "${CYAN}RUM Shop — Container Status${NC}"
+    echo -e "${CYAN}Kelvo E-Comm — Container Status${NC}"
     echo ""
     docker compose ps
     exit 0
@@ -88,7 +88,7 @@ esac
 # ── Start ─────────────────────────────────────────────────────
 echo ""
 echo -e "${CYAN}╔══════════════════════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║          RUM Shop — Starting with Docker             ║${NC}"
+echo -e "${CYAN}║          Kelvo E-Comm — Starting with Docker             ║${NC}"
 echo -e "${CYAN}╚══════════════════════════════════════════════════════╝${NC}"
 echo ""
 
@@ -127,7 +127,7 @@ sleep 5
 
 echo ""
 echo -e "${GREEN}╔══════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║          RUM Shop — All Services Running             ║${NC}"
+echo -e "${GREEN}║          Kelvo E-Comm — All Services Running             ║${NC}"
 echo -e "${GREEN}╠══════════════════════════════════════════════════════╣${NC}"
 echo -e "${GREEN}║${NC}                                                      ${GREEN}║${NC}"
 echo -e "${GREEN}║${NC}  Frontend:          http://localhost:3000             ${GREEN}║${NC}"

@@ -1,4 +1,4 @@
-# Kelvo-Ecomm
+# Kelvo E-Comm
 
 E-commerce application with polyglot microservices on AWS. Full observability with **Datadog RUM**, **APM**, **DBM**, and **FinOps** right-sizing recommendations.
 

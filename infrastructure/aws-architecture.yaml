@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  RUM Shop E-Commerce.
+  Kelvo E-Comm.
   EC2 (Java Order Service, oversized for FinOps),
   ECS Fargate (Node.js Cart/Auth/Payment with Datadog sidecar + UDS + Firelens),
   Lambda (Python Search/Recommendations/Notifications, instrumented via Datadog Remote Instrumentation),
@@ -385,7 +385,7 @@ Resources:
           mkdir -p /opt/rumshop
           cat > /etc/systemd/system/rumshop-order.service <<SVCEOF
           [Unit]
-          Description=RUM Shop Order Service
+          Description=Kelvo E-Comm Order Service
           After=network.target
           [Service]
           Type=simple

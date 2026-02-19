@@ -1,5 +1,5 @@
 /**
- * RUM Shop Payment Lambda - Payment intent and confirmation backed by Redis.
+ * Kelvo E-Comm Payment Lambda - Payment intent and confirmation backed by Redis.
  * @module payment/handler
  */
 

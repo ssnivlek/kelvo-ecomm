@@ -1,5 +1,5 @@
 /**
- * RUM Shop Cart Lambda - Shopping cart operations backed by Redis.
+ * Kelvo E-Comm Cart Lambda - Shopping cart operations backed by Redis.
  * @module cart/handler
  */
 

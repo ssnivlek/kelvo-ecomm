@@ -1,4 +1,4 @@
-"""Shared utilities for RUM Shop Python Lambda functions."""
+"""Shared utilities for Kelvo E-Comm Python Lambda functions."""
 
 from shared.utils import (
     json_response,

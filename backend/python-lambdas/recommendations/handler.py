@@ -1,4 +1,4 @@
-"""Product Recommendations Lambda for RUM Shop.
+"""Product Recommendations Lambda for Kelvo E-Comm.
 
 GET /api/recommendations?productId={id}&limit=4
 - Given a product ID, returns similar products from the same category.

@@ -1,6 +1,6 @@
-# RUM Shop Frontend
+# Kelvo E-Comm Frontend
 
-A modern React e-commerce frontend for RUM Shop with Datadog RUM integration.
+A modern React e-commerce frontend for Kelvo E-Comm with Datadog RUM integration.
 
 ## Setup
 

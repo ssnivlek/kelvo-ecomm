@@ -23,7 +23,7 @@ provider:
 functions:
   payment:
     handler: handler.handler
-    description: RUM Shop Payment API - create intent, confirm, webhook (mock Stripe)
+    description: Kelvo E-Comm Payment API - create intent, confirm, webhook (mock Stripe)
     events:
       # POST /api/payment/create-intent
       - http:

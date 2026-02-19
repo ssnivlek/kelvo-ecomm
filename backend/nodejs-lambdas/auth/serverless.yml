@@ -24,7 +24,7 @@ provider:
 functions:
   auth:
     handler: handler.handler
-    description: RUM Shop Auth API - register, login, profile
+    description: Kelvo E-Comm Auth API - register, login, profile
     events:
       # POST /api/auth/register
       - http:

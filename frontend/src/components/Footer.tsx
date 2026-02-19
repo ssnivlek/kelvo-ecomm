@@ -18,7 +18,7 @@ export function Footer() {
           <div className="footer-brand">
             <Link to="/" className="footer-logo">
               <FiShoppingBag size={24} />
-              <span>RUM Shop</span>
+              <span>Kelvo E-Comm</span>
             </Link>
             <p className="footer-tagline">
               Premium Products, Exceptional Experience. Your trusted destination for quality.
@@ -69,7 +69,7 @@ export function Footer() {
         </div>
 
         <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} RUM Shop. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Kelvo E-Comm. All rights reserved.</p>
         </div>
       </div>
     </footer>

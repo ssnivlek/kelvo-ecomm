@@ -1,1 +1,1 @@
-"""RUM Shop Product Search Lambda."""
+"""Kelvo E-Comm Product Search Lambda."""

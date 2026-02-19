@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ================================================================
-# RUM Shop - Full AWS Deployment Script
+# Kelvo E-Comm - Full AWS Deployment Script
 # ================================================================
 # Deploys: CloudFormation stack (VPC, EC2, ECS, Lambda, S3, CF)
 #          + builds and pushes Docker images to ECR
@@ -46,7 +46,7 @@ AWS_CMD="aws --region ${AWS_REGION}"
 
 echo ""
 echo "╔══════════════════════════════════════════════════════╗"
-echo "║         RUM Shop - AWS Deployment                   ║"
+echo "║         Kelvo E-Comm - AWS Deployment                   ║"
 echo "╠══════════════════════════════════════════════════════╣"
 echo "║  Stack:    ${STACK_NAME}"
 echo "║  Region:   ${AWS_REGION}"

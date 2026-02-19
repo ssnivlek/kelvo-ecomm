@@ -1,4 +1,4 @@
-"""Shared utilities for RUM Shop Python Lambda functions.
+"""Shared utilities for Kelvo E-Comm Python Lambda functions.
 
 Provides JSON/error response helpers, Datadog trace context propagation,
 and mock product data consistent with the Java order service.

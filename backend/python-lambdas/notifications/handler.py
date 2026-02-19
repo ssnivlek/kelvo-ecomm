@@ -1,4 +1,4 @@
-"""Order Notification Lambda for RUM Shop.
+"""Order Notification Lambda for Kelvo E-Comm.
 
 POST /api/notifications/order-confirmation
 POST /api/notifications/shipping-update

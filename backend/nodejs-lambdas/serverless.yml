@@ -1,4 +1,4 @@
-# RUM Shop - Deploy all Lambdas from nodejs-lambdas root: serverless deploy
+# Kelvo E-Comm - Deploy all Lambdas from nodejs-lambdas root: serverless deploy
 # Deploy single function: serverless deploy function -f cart
 service: rum-shop
 
@@ -22,7 +22,7 @@ package:
 functions:
   cart:
     handler: cart/handler.handler
-    description: RUM Shop Cart API
+    description: Kelvo E-Comm Cart API
     environment:
       DD_SERVICE: rum-shop-cart
     events:
@@ -37,7 +37,7 @@ functions:
 
   auth:
     handler: auth/handler.handler
-    description: RUM Shop Auth API
+    description: Kelvo E-Comm Auth API
     environment:
       DD_SERVICE: rum-shop-auth
     events:
@@ -50,7 +50,7 @@ functions:
 
   payment:
     handler: payment/handler.handler
-    description: RUM Shop Payment API (mock Stripe)
+    description: Kelvo E-Comm Payment API (mock Stripe)
     environment:
       DD_SERVICE: rum-shop-payment
     events:

@@ -1,7 +1,7 @@
 {
   "name": "rum-shop-nodejs-lambdas",
   "version": "1.0.0",
-  "description": "RUM Shop e-commerce AWS Lambda functions with Datadog APM",
+  "description": "Kelvo E-Comm AWS Lambda functions with Datadog APM",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

@@ -14,8 +14,8 @@
     <groupId>com.rumshop</groupId>
     <artifactId>order-service</artifactId>
     <version>1.0.0</version>
-    <name>RUM Shop Order Service</name>
-    <description>Order and inventory management service for RUM Shop e-commerce</description>
+    <name>Kelvo E-Comm Order Service</name>
+    <description>Order and inventory management service for Kelvo E-Comm</description>
 
     <properties>
         <java.version>17</java.version>

@@ -1,4 +1,4 @@
-"""Product Search Lambda for RUM Shop.
+"""Product Search Lambda for Kelvo E-Comm.
 
 GET /api/search?q={query}&category={category}&minPrice={min}&maxPrice={max}&sort={price_asc|price_desc|name}
 """

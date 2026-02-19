@@ -1,5 +1,5 @@
 /**
- * RUM Shop Auth Lambda - User registration, login, and profile backed by PostgreSQL.
+ * Kelvo E-Comm Auth Lambda - User registration, login, and profile backed by PostgreSQL.
  * @module auth/handler
  */
 

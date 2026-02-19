@@ -29,7 +29,7 @@ export function Header() {
       <div className="header-inner container">
         <Link to="/" className="header-logo" onClick={() => setMobileMenuOpen(false)}>
           <FiShoppingBag className="logo-icon" />
-          <span>RUM Shop</span>
+          <span>Kelvo E-Comm</span>
         </Link>
 
         <nav className="header-nav desktop-only">

@@ -23,7 +23,7 @@ provider:
 functions:
   cart:
     handler: handler.handler
-    description: RUM Shop Cart API - add, get, update, remove, clear
+    description: Kelvo E-Comm Cart API - add, get, update, remove, clear
     events:
       # POST /api/cart/add
       - http:
