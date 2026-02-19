@@ -46,10 +46,10 @@ if [[ ! -f ".env" ]]; then
   exit 1
 fi
 
-# Check for unfilled placeholders
-if grep -q '<YOUR_' .env 2>/dev/null; then
+# Check for unfilled placeholders (ignore comment lines)
+if grep -v '^\s*#' .env | grep -q '<YOUR_' 2>/dev/null; then
   echo -e "${RED}ERROR: .env still has unfilled placeholders:${NC}"
-  grep '<YOUR_' .env | head -5
+  grep -v '^\s*#' .env | grep '<YOUR_' | head -5
   echo ""
   echo "  Edit .env and replace all <YOUR_...> values."
   exit 1
