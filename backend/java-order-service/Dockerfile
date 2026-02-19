@@ -1,24 +1,20 @@
-# Build stage
-FROM eclipse-temurin:17-jdk-alpine AS builder
+# Build stage (jammy supports both amd64 and arm64)
+FROM eclipse-temurin:17-jdk-jammy AS builder
 
 WORKDIR /app
 
-# Copy Maven files
 COPY pom.xml .
 COPY src ./src
 
-# Download dependencies and build (skip tests for faster build)
-RUN apk add --no-cache maven && \
+RUN apt-get update && apt-get install -y --no-install-recommends maven curl && \
     mvn dependency:go-offline -B && \
-    mvn clean package -DskipTests -B
-
-# Download Datadog Java agent from Maven Central
-RUN apk add --no-cache curl && \
+    mvn clean package -DskipTests -B && \
     curl -sLo /app/dd-java-agent.jar \
-    "https://repo1.maven.org/maven2/com/datadoghq/dd-java-agent/1.31.0/dd-java-agent-1.31.0.jar"
+      "https://repo1.maven.org/maven2/com/datadoghq/dd-java-agent/1.31.0/dd-java-agent-1.31.0.jar" && \
+    rm -rf /var/lib/apt/lists/*
 
-# Runtime stage
-FROM eclipse-temurin:17-jre-alpine
+# Runtime stage (jammy supports both amd64 and arm64)
+FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
