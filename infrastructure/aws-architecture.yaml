@@ -1,0 +1,961 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  RUM Shop E-Commerce.
+  EC2 (Java Order Service, oversized for FinOps),
+  ECS Fargate (Node.js Cart/Auth/Payment with Datadog sidecar + UDS + Firelens),
+  Lambda (Python Search/Recommendations/Notifications, instrumented via Datadog Remote Instrumentation),
+  S3+CloudFront (React frontend).
+
+# ================================================================
+# PARAMETERS
+# ================================================================
+Parameters:
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [production, staging, development]
+
+  DatadogApiKey:
+    Type: String
+    NoEcho: true
+    Description: Datadog API Key (https://app.datadoghq.com/organization-settings/api-keys)
+
+  DatadogAppKey:
+    Type: String
+    NoEcho: true
+    Description: Datadog Application Key
+
+  DatadogSite:
+    Type: String
+    Default: datadoghq.com
+    AllowedValues: [datadoghq.com, datadoghq.eu, us3.datadoghq.com, us5.datadoghq.com, ap1.datadoghq.com]
+
+  EC2KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: EC2 Key Pair for SSH
+
+  EC2InstanceType:
+    Type: String
+    Default: m5.xlarge
+    Description: >
+      INTENTIONALLY OVERSIZED for FinOps demo.
+      App needs t3.small. m5.xlarge (4 vCPU, 16 GB) lets Datadog
+      Cloud Cost Management recommend right-sizing.
+    AllowedValues: [m5.large, m5.xlarge, m5.2xlarge, c5.xlarge, r5.large]
+
+  FargateCpu:
+    Type: String
+    Default: '1024'
+    Description: >
+      INTENTIONALLY OVERSIZED. Services need 256. Using 1024 for FinOps.
+    AllowedValues: ['256', '512', '1024', '2048']
+
+  FargateMemory:
+    Type: String
+    Default: '2048'
+    Description: >
+      INTENTIONALLY OVERSIZED. Services need 512 MB. Using 2048 MB for FinOps.
+    AllowedValues: ['512', '1024', '2048', '4096']
+
+  JwtSecret:
+    Type: String
+    NoEcho: true
+    Default: rum-shop-secret-key-2024
+
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+
+# ================================================================
+# RESOURCES
+# ================================================================
+Resources:
+
+  # ────────────────────────────────────────────────────────────
+  # VPC + Networking
+  # ────────────────────────────────────────────────────────────
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - { Key: Name, Value: !Sub '${AWS::StackName}-vpc' }
+        - { Key: env, Value: !Ref Environment }
+        - { Key: project, Value: rumshop }
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags: [{ Key: Name, Value: !Sub '${AWS::StackName}-public-1' }]
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags: [{ Key: Name, Value: !Sub '${AWS::StackName}-public-2' }]
+
+  PubSubnet1RTA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: { SubnetId: !Ref PublicSubnet1, RouteTableId: !Ref PublicRouteTable }
+
+  PubSubnet2RTA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: { SubnetId: !Ref PublicSubnet2, RouteTableId: !Ref PublicRouteTable }
+
+  NatEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: AttachGateway
+    Properties: { Domain: vpc }
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatEIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: { VpcId: !Ref VPC }
+
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.3.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags: [{ Key: Name, Value: !Sub '${AWS::StackName}-private-1' }]
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.4.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Tags: [{ Key: Name, Value: !Sub '${AWS::StackName}-private-2' }]
+
+  PrvSubnet1RTA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: { SubnetId: !Ref PrivateSubnet1, RouteTableId: !Ref PrivateRouteTable }
+
+  PrvSubnet2RTA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: { SubnetId: !Ref PrivateSubnet2, RouteTableId: !Ref PrivateRouteTable }
+
+  # ────────────────────────────────────────────────────────────
+  # Security Groups
+  # ────────────────────────────────────────────────────────────
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ALB - HTTP/HTTPS from internet
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0 }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0 }
+
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: EC2 Order Service
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 8080, ToPort: 8080, SourceSecurityGroupId: !Ref ALBSecurityGroup }
+        - { IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: 0.0.0.0/0 }
+
+  ECSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ECS Fargate tasks
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 3001, ToPort: 3003, SourceSecurityGroupId: !Ref ALBSecurityGroup }
+
+  # ────────────────────────────────────────────────────────────
+  # IAM Roles
+  # ────────────────────────────────────────────────────────────
+  EC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-ec2-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - { Effect: Allow, Principal: { Service: ec2.amazonaws.com }, Action: 'sts:AssumeRole' }
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [!Ref EC2Role]
+
+  ECSTaskExecRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-ecs-exec'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - { Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-ecs-task'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - { Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }
+      Policies:
+        - PolicyName: ecs-task-default
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ['ecs:ListClusters', 'ecs:ListContainerInstances', 'ecs:DescribeContainerInstances']
+                Resource: '*'
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-lambda-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - { Effect: Allow, Principal: { Service: lambda.amazonaws.com }, Action: 'sts:AssumeRole' }
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # ────────────────────────────────────────────────────────────
+  # EC2 — Java Order Service (OVERSIZED for FinOps)
+  # ────────────────────────────────────────────────────────────
+  # Actual need: t3.small (~$15/mo). Deployed: m5.xlarge (~$140/mo).
+  # Datadog Cloud Cost → Recommendations will flag this.
+  OrderServiceInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref EC2InstanceType
+      ImageId: !Ref LatestAmiId
+      KeyName: !Ref EC2KeyPairName
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      SubnetId: !Ref PublicSubnet1
+      SecurityGroupIds: [!Ref EC2SecurityGroup]
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs: { VolumeSize: 30, VolumeType: gp3 }
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euo pipefail
+
+          # Install Datadog Agent
+          DD_API_KEY=${DatadogApiKey} DD_SITE=${DatadogSite} \
+          DD_HOST_TAGS="env:${Environment},service:rum-shop-order-service,team:rumshop" \
+            bash -c "$(curl -L https://install.datadoghq.com/scripts/install_script_agent7.sh)"
+
+          cat >> /etc/datadog-agent/datadog.yaml <<DDCFG
+          apm_config:
+            enabled: true
+          process_config:
+            process_collection:
+              enabled: true
+          logs_enabled: true
+          DDCFG
+          systemctl restart datadog-agent
+
+          # Install Java 17
+          dnf install -y java-17-amazon-corretto-headless wget
+
+          # Datadog Java APM agent
+          wget -q https://dtdg.co/latest-java-tracer -O /opt/dd-java-agent.jar
+
+          mkdir -p /opt/rumshop
+          cat > /etc/systemd/system/rumshop-order.service <<SVCEOF
+          [Unit]
+          Description=RUM Shop Order Service
+          After=network.target
+          [Service]
+          Type=simple
+          ExecStart=/usr/bin/java \
+            -javaagent:/opt/dd-java-agent.jar \
+            -Ddd.service=rum-shop-order-service \
+            -Ddd.env=${Environment} \
+            -Ddd.version=1.0.0 \
+            -Ddd.profiling.enabled=true \
+            -Ddd.logs.injection=true \
+            -Ddd.trace.analytics.enabled=true \
+            -Xmx512m -Xms256m \
+            -jar /opt/rumshop/order-service.jar
+          Restart=always
+          RestartSec=10
+          [Install]
+          WantedBy=multi-user.target
+          SVCEOF
+          systemctl daemon-reload
+          systemctl enable rumshop-order
+      Tags:
+        - { Key: Name, Value: !Sub '${AWS::StackName}-order-service' }
+        - { Key: env, Value: !Ref Environment }
+        - { Key: service, Value: rum-shop-order-service }
+        - { Key: finops-note, Value: intentionally-oversized-for-rightsizing-demo }
+        - { Key: ideal-instance-type, Value: t3.small }
+
+  # ────────────────────────────────────────────────────────────
+  # ALB (shared by EC2 + ECS Fargate)
+  # ────────────────────────────────────────────────────────────
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub '${AWS::StackName}-alb'
+      Scheme: internet-facing
+      Subnets: [!Ref PublicSubnet1, !Ref PublicSubnet2]
+      SecurityGroups: [!Ref ALBSecurityGroup]
+
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ALB
+      Port: 80
+      Protocol: HTTP
+      DefaultAction:
+        Type: fixed-response
+        FixedResponseConfig:
+          ContentType: application/json
+          MessageBody: '{"service":"rumshop-alb","status":"ok"}'
+          StatusCode: '200'
+
+  OrderTG:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub '${AWS::StackName}-order-tg'
+      Protocol: HTTP
+      Port: 8080
+      VpcId: !Ref VPC
+      TargetType: instance
+      Targets: [{ Id: !Ref OrderServiceInstance, Port: 8080 }]
+      HealthCheckPath: /actuator/health
+
+  OrderRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref ALBListener
+      Priority: 10
+      Conditions: [{ Field: path-pattern, Values: ['/api/products*', '/api/orders*'] }]
+      Actions: [{ Type: forward, TargetGroupArn: !Ref OrderTG }]
+
+  CartTG:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub '${AWS::StackName}-cart-tg'
+      Protocol: HTTP
+      Port: 3001
+      VpcId: !Ref VPC
+      TargetType: ip
+      HealthCheckPath: /health
+
+  CartRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref ALBListener
+      Priority: 20
+      Conditions: [{ Field: path-pattern, Values: ['/api/cart*'] }]
+      Actions: [{ Type: forward, TargetGroupArn: !Ref CartTG }]
+
+  AuthTG:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub '${AWS::StackName}-auth-tg'
+      Protocol: HTTP
+      Port: 3002
+      VpcId: !Ref VPC
+      TargetType: ip
+      HealthCheckPath: /health
+
+  AuthRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref ALBListener
+      Priority: 30
+      Conditions: [{ Field: path-pattern, Values: ['/api/auth*'] }]
+      Actions: [{ Type: forward, TargetGroupArn: !Ref AuthTG }]
+
+  PaymentTG:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub '${AWS::StackName}-payment-tg'
+      Protocol: HTTP
+      Port: 3003
+      VpcId: !Ref VPC
+      TargetType: ip
+      HealthCheckPath: /health
+
+  PaymentRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref ALBListener
+      Priority: 40
+      Conditions: [{ Field: path-pattern, Values: ['/api/payment*'] }]
+      Actions: [{ Type: forward, TargetGroupArn: !Ref PaymentTG }]
+
+  # ────────────────────────────────────────────────────────────
+  # ECR Repositories
+  # ────────────────────────────────────────────────────────────
+  CartECR:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub '${AWS::StackName}/cart-service'
+      ImageScanningConfiguration: { ScanOnPush: true }
+
+  AuthECR:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub '${AWS::StackName}/auth-service'
+      ImageScanningConfiguration: { ScanOnPush: true }
+
+  PaymentECR:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub '${AWS::StackName}/payment-service'
+      ImageScanningConfiguration: { ScanOnPush: true }
+
+  # ────────────────────────────────────────────────────────────
+  # ECS Cluster
+  # ────────────────────────────────────────────────────────────
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub '${AWS::StackName}-cluster'
+      ClusterSettings: [{ Name: containerInsights, Value: enabled }]
+
+  # Log Groups
+  CartLogs:
+    Type: AWS::Logs::LogGroup
+    Properties: { LogGroupName: !Sub '/ecs/${AWS::StackName}/cart', RetentionInDays: 14 }
+  AuthLogs:
+    Type: AWS::Logs::LogGroup
+    Properties: { LogGroupName: !Sub '/ecs/${AWS::StackName}/auth', RetentionInDays: 14 }
+  PaymentLogs:
+    Type: AWS::Logs::LogGroup
+    Properties: { LogGroupName: !Sub '/ecs/${AWS::StackName}/payment', RetentionInDays: 14 }
+
+  # ────────────────────────────────────────────────────────────
+  # ECS Fargate — Cart (UDS sockets + Firelens + Datadog sidecar)
+  # OVERSIZED: 1024 CPU / 2048 MB (ideal: 256/512)
+  # ────────────────────────────────────────────────────────────
+  CartTask:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub '${AWS::StackName}-cart'
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      Cpu: !Ref FargateCpu
+      Memory: !Ref FargateMemory
+      ExecutionRoleArn: !GetAtt ECSTaskExecRole.Arn
+      TaskRoleArn: !GetAtt ECSTaskRole.Arn
+      Volumes:
+        - Name: dd-sockets
+      ContainerDefinitions:
+        # Datadog Agent sidecar
+        - Name: datadog-agent
+          Image: public.ecr.aws/datadog/agent:latest
+          Essential: false
+          Environment:
+            - { Name: DD_API_KEY, Value: !Ref DatadogApiKey }
+            - { Name: DD_SITE, Value: !Ref DatadogSite }
+            - { Name: DD_APM_ENABLED, Value: 'true' }
+            - { Name: ECS_FARGATE, Value: 'true' }
+          MountPoints:
+            - { ContainerPath: /var/run/datadog, SourceVolume: dd-sockets }
+          PortMappings:
+            - { ContainerPort: 8126 }
+        # Firelens log router
+        - Name: log-router
+          Image: public.ecr.aws/aws-observability/aws-for-fluent-bit:stable
+          Essential: false
+          FirelensConfiguration:
+            Type: fluentbit
+            Options:
+              enable-ecs-log-metadata: 'true'
+        # App container
+        - Name: cart-service
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${AWS::StackName}/cart-service:latest'
+          Essential: true
+          PortMappings:
+            - { ContainerPort: 3001 }
+          Environment:
+            - { Name: DD_SERVICE, Value: rum-shop-cart }
+            - { Name: DD_ENV, Value: !Ref Environment }
+            - { Name: DD_VERSION, Value: '1.0.0' }
+            - { Name: DD_TRACE_AGENT_URL, Value: 'unix:///var/run/datadog/apm.socket' }
+            - { Name: PORT, Value: '3001' }
+          MountPoints:
+            - { ContainerPath: /var/run/datadog, SourceVolume: dd-sockets }
+          LogConfiguration:
+            LogDriver: awsfirelens
+            Options:
+              Host: !Sub 'http-intake.logs.${DatadogSite}'
+              apikey: !Ref DatadogApiKey
+              provider: ecs
+              Name: datadog
+              dd_service: rum-shop-cart
+              dd_tags: !Sub 'env:${Environment},version:1.0.0'
+      Tags:
+        - { Key: service, Value: rum-shop-cart }
+        - { Key: finops-note, Value: intentionally-oversized }
+        - { Key: ideal-cpu, Value: '256' }
+        - { Key: ideal-memory, Value: '512' }
+
+  CartSvc:
+    Type: AWS::ECS::Service
+    DependsOn: CartRule
+    Properties:
+      ServiceName: !Sub '${AWS::StackName}-cart'
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref CartTask
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets: [!Ref PrivateSubnet1, !Ref PrivateSubnet2]
+          SecurityGroups: [!Ref ECSSecurityGroup]
+      LoadBalancers:
+        - { ContainerName: cart-service, ContainerPort: 3001, TargetGroupArn: !Ref CartTG }
+
+  # ────────────────────────────────────────────────────────────
+  # ECS Fargate — Auth (same pattern)
+  # ────────────────────────────────────────────────────────────
+  AuthTask:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub '${AWS::StackName}-auth'
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      Cpu: !Ref FargateCpu
+      Memory: !Ref FargateMemory
+      ExecutionRoleArn: !GetAtt ECSTaskExecRole.Arn
+      TaskRoleArn: !GetAtt ECSTaskRole.Arn
+      Volumes:
+        - Name: dd-sockets
+      ContainerDefinitions:
+        - Name: datadog-agent
+          Image: public.ecr.aws/datadog/agent:latest
+          Essential: false
+          Environment:
+            - { Name: DD_API_KEY, Value: !Ref DatadogApiKey }
+            - { Name: DD_SITE, Value: !Ref DatadogSite }
+            - { Name: DD_APM_ENABLED, Value: 'true' }
+            - { Name: ECS_FARGATE, Value: 'true' }
+          MountPoints:
+            - { ContainerPath: /var/run/datadog, SourceVolume: dd-sockets }
+          PortMappings: [{ ContainerPort: 8126 }]
+        - Name: log-router
+          Image: public.ecr.aws/aws-observability/aws-for-fluent-bit:stable
+          Essential: false
+          FirelensConfiguration:
+            Type: fluentbit
+            Options: { enable-ecs-log-metadata: 'true' }
+        - Name: auth-service
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${AWS::StackName}/auth-service:latest'
+          Essential: true
+          PortMappings: [{ ContainerPort: 3002 }]
+          Environment:
+            - { Name: DD_SERVICE, Value: rum-shop-auth }
+            - { Name: DD_ENV, Value: !Ref Environment }
+            - { Name: DD_VERSION, Value: '1.0.0' }
+            - { Name: DD_TRACE_AGENT_URL, Value: 'unix:///var/run/datadog/apm.socket' }
+            - { Name: JWT_SECRET, Value: !Ref JwtSecret }
+            - { Name: PORT, Value: '3002' }
+          MountPoints:
+            - { ContainerPath: /var/run/datadog, SourceVolume: dd-sockets }
+          LogConfiguration:
+            LogDriver: awsfirelens
+            Options:
+              Host: !Sub 'http-intake.logs.${DatadogSite}'
+              apikey: !Ref DatadogApiKey
+              provider: ecs
+              Name: datadog
+              dd_service: rum-shop-auth
+              dd_tags: !Sub 'env:${Environment},version:1.0.0'
+      Tags:
+        - { Key: service, Value: rum-shop-auth }
+        - { Key: finops-note, Value: intentionally-oversized }
+
+  AuthSvc:
+    Type: AWS::ECS::Service
+    DependsOn: AuthRule
+    Properties:
+      ServiceName: !Sub '${AWS::StackName}-auth'
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref AuthTask
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets: [!Ref PrivateSubnet1, !Ref PrivateSubnet2]
+          SecurityGroups: [!Ref ECSSecurityGroup]
+      LoadBalancers:
+        - { ContainerName: auth-service, ContainerPort: 3002, TargetGroupArn: !Ref AuthTG }
+
+  # ────────────────────────────────────────────────────────────
+  # ECS Fargate — Payment (same pattern)
+  # ────────────────────────────────────────────────────────────
+  PaymentTask:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub '${AWS::StackName}-payment'
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      Cpu: !Ref FargateCpu
+      Memory: !Ref FargateMemory
+      ExecutionRoleArn: !GetAtt ECSTaskExecRole.Arn
+      TaskRoleArn: !GetAtt ECSTaskRole.Arn
+      Volumes:
+        - Name: dd-sockets
+      ContainerDefinitions:
+        - Name: datadog-agent
+          Image: public.ecr.aws/datadog/agent:latest
+          Essential: false
+          Environment:
+            - { Name: DD_API_KEY, Value: !Ref DatadogApiKey }
+            - { Name: DD_SITE, Value: !Ref DatadogSite }
+            - { Name: DD_APM_ENABLED, Value: 'true' }
+            - { Name: ECS_FARGATE, Value: 'true' }
+          MountPoints:
+            - { ContainerPath: /var/run/datadog, SourceVolume: dd-sockets }
+          PortMappings: [{ ContainerPort: 8126 }]
+        - Name: log-router
+          Image: public.ecr.aws/aws-observability/aws-for-fluent-bit:stable
+          Essential: false
+          FirelensConfiguration:
+            Type: fluentbit
+            Options: { enable-ecs-log-metadata: 'true' }
+        - Name: payment-service
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${AWS::StackName}/payment-service:latest'
+          Essential: true
+          PortMappings: [{ ContainerPort: 3003 }]
+          Environment:
+            - { Name: DD_SERVICE, Value: rum-shop-payment }
+            - { Name: DD_ENV, Value: !Ref Environment }
+            - { Name: DD_VERSION, Value: '1.0.0' }
+            - { Name: DD_TRACE_AGENT_URL, Value: 'unix:///var/run/datadog/apm.socket' }
+            - { Name: PORT, Value: '3003' }
+          MountPoints:
+            - { ContainerPath: /var/run/datadog, SourceVolume: dd-sockets }
+          LogConfiguration:
+            LogDriver: awsfirelens
+            Options:
+              Host: !Sub 'http-intake.logs.${DatadogSite}'
+              apikey: !Ref DatadogApiKey
+              provider: ecs
+              Name: datadog
+              dd_service: rum-shop-payment
+              dd_tags: !Sub 'env:${Environment},version:1.0.0'
+      Tags:
+        - { Key: service, Value: rum-shop-payment }
+        - { Key: finops-note, Value: intentionally-oversized }
+
+  PaymentSvc:
+    Type: AWS::ECS::Service
+    DependsOn: PaymentRule
+    Properties:
+      ServiceName: !Sub '${AWS::StackName}-payment'
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref PaymentTask
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets: [!Ref PrivateSubnet1, !Ref PrivateSubnet2]
+          SecurityGroups: [!Ref ECSSecurityGroup]
+      LoadBalancers:
+        - { ContainerName: payment-service, ContainerPort: 3003, TargetGroupArn: !Ref PaymentTG }
+
+  # ────────────────────────────────────────────────────────────
+  # API Gateway (for Lambda)
+  # ────────────────────────────────────────────────────────────
+  ApiGw:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub '${AWS::StackName}-api'
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowOrigins: ['*']
+        AllowMethods: [GET, POST, PUT, DELETE, OPTIONS]
+        AllowHeaders: [Content-Type, Authorization, traceparent, tracestate,
+                       X-Datadog-Trace-Id, X-Datadog-Parent-Id, X-Datadog-Sampling-Priority]
+
+  ApiGwStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref ApiGw
+      StageName: '$default'
+      AutoDeploy: true
+
+  # ────────────────────────────────────────────────────────────
+  # Lambda Functions — CLEAN (no Datadog layers/env)
+  # Instrumented via Datadog Remote Instrumentation.
+  # After deploying this stack, go to Datadog > APM > Service Setup
+  # > Serverless > Remote Instrumentation to enable these functions.
+  # ────────────────────────────────────────────────────────────
+  SearchFn:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-search'
+      Runtime: python3.11
+      Handler: search/handler.handler
+      Role: !GetAtt LambdaRole.Arn
+      MemorySize: 256
+      Timeout: 30
+      Environment:
+        Variables:
+          DD_SERVICE: rum-shop-search
+          DD_ENV: !Ref Environment
+          DD_VERSION: '1.0.0'
+      Tags:
+        - { Key: env, Value: !Ref Environment }
+        - { Key: service, Value: rum-shop-search }
+        - { Key: team, Value: rumshop }
+
+  SearchInteg:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref ApiGw
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt SearchFn.Arn
+      PayloadFormatVersion: '2.0'
+
+  SearchRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ApiGw
+      RouteKey: 'GET /api/search'
+      Target: !Sub 'integrations/${SearchInteg}'
+
+  SearchPerm:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref SearchFn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGw}/*'
+
+  RecommendationsFn:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-recommendations'
+      Runtime: python3.11
+      Handler: recommendations/handler.handler
+      Role: !GetAtt LambdaRole.Arn
+      MemorySize: 256
+      Timeout: 30
+      Environment:
+        Variables:
+          DD_SERVICE: rum-shop-recommendations
+          DD_ENV: !Ref Environment
+          DD_VERSION: '1.0.0'
+      Tags:
+        - { Key: env, Value: !Ref Environment }
+        - { Key: service, Value: rum-shop-recommendations }
+        - { Key: team, Value: rumshop }
+
+  RecsInteg:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref ApiGw
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt RecommendationsFn.Arn
+      PayloadFormatVersion: '2.0'
+
+  RecsRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ApiGw
+      RouteKey: 'GET /api/recommendations'
+      Target: !Sub 'integrations/${RecsInteg}'
+
+  RecsPerm:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref RecommendationsFn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGw}/*'
+
+  NotificationsFn:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-notifications'
+      Runtime: python3.11
+      Handler: notifications/handler.handler
+      Role: !GetAtt LambdaRole.Arn
+      MemorySize: 256
+      Timeout: 30
+      Environment:
+        Variables:
+          DD_SERVICE: rum-shop-notifications
+          DD_ENV: !Ref Environment
+          DD_VERSION: '1.0.0'
+      Tags:
+        - { Key: env, Value: !Ref Environment }
+        - { Key: service, Value: rum-shop-notifications }
+        - { Key: team, Value: rumshop }
+
+  NotifInteg:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref ApiGw
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt NotificationsFn.Arn
+      PayloadFormatVersion: '2.0'
+
+  NotifOrderRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ApiGw
+      RouteKey: 'POST /api/notifications/order-confirmation'
+      Target: !Sub 'integrations/${NotifInteg}'
+
+  NotifShipRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ApiGw
+      RouteKey: 'POST /api/notifications/shipping-update'
+      Target: !Sub 'integrations/${NotifInteg}'
+
+  NotifPerm:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref NotificationsFn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGw}/*'
+
+  # ────────────────────────────────────────────────────────────
+  # S3 + CloudFront — React Frontend
+  # ────────────────────────────────────────────────────────────
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${AWS::StackName}-frontend-${AWS::AccountId}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  FrontendOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub '${AWS::StackName}-oac'
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  CDN:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        Origins:
+          - Id: S3
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            OriginAccessControlId: !Ref FrontendOAC
+            S3OriginConfig: { OriginAccessIdentity: '' }
+        DefaultCacheBehavior:
+          ViewerProtocolPolicy: redirect-to-https
+          TargetOriginId: S3
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+        CustomErrorResponses:
+          - { ErrorCode: 404, ResponseCode: 200, ResponsePagePath: /index.html }
+          - { ErrorCode: 403, ResponseCode: 200, ResponsePagePath: /index.html }
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: cloudfront.amazonaws.com }
+            Action: s3:GetObject
+            Resource: !Sub '${FrontendBucket.Arn}/*'
+            Condition:
+              StringEquals:
+                'AWS:SourceArn': !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${CDN}'
+
+# ================================================================
+# OUTPUTS
+# ================================================================
+Outputs:
+  ALBURL:
+    Value: !Sub 'http://${ALB.DNSName}'
+  ApiGatewayURL:
+    Value: !Sub 'https://${ApiGw}.execute-api.${AWS::Region}.amazonaws.com'
+  FrontendURL:
+    Value: !Sub 'https://${CDN.DomainName}'
+  EC2InstanceId:
+    Value: !Ref OrderServiceInstance
+  EC2PublicIP:
+    Value: !GetAtt OrderServiceInstance.PublicIp
+  ECSClusterName:
+    Value: !Ref ECSCluster
+  FrontendBucketName:
+    Value: !Ref FrontendBucket
+  CloudFrontDistributionId:
+    Value: !Ref CDN
+  FinOpsNotes:
+    Value: !Sub >
+      EC2: ${EC2InstanceType} (ideal t3.small, ~$125/mo savings) |
+      ECS x3: ${FargateCpu}/${FargateMemory} (ideal 256/512, ~$81/mo savings) |
+      Total waste: ~$206/mo
+  LambdaRemoteInstrumentation:
+    Value: !Sub >
+      Lambda functions deployed WITHOUT Datadog layers.
+      Go to Datadog > APM > Service Setup > Serverless > Remote Instrumentation
+      to enable region ${AWS::Region} and select functions:
+      ${AWS::StackName}-search, ${AWS::StackName}-recommendations, ${AWS::StackName}-notifications
