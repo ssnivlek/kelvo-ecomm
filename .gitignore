@@ -1,0 +1,39 @@
+# Environment files with secrets
+.env
+.env.aws.filled
+*.local.filled
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/nodejs-lambdas/node_modules/
+
+# Build artifacts
+frontend/build/
+backend/java-order-service/target/
+*.class
+*.jar
+!backend/java-order-service/Dockerfile
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Docker
+.docker/
+
+# AWS SAM
+.aws-sam/
+samconfig.toml
+
+# Logs
+*.log
