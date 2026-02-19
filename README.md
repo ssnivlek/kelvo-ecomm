@@ -131,9 +131,37 @@ Lambda functions are deployed **without** Datadog layers. Instrumented via [Data
 4. **Select Functions**: choose the `rumshop-*` functions
 5. Configure APM/Tracing + Logs, then **Confirm**
 
+### Database Monitoring (DBM)
+
+Datadog Agent monitors both databases for query performance, slow queries, explain plans, and connection health.
+
+**PostgreSQL (RDS / local)**
+
+The `datadog` user is created automatically:
+- **Local**: `infrastructure/postgres-init.sql` runs on first `docker-compose up` via `/docker-entrypoint-initdb.d/`
+- **AWS**: Run the init script against RDS after deployment (see `deploy-aws.sh` output)
+
+Permissions granted:
+- `pg_monitor` role (read access to `pg_stat_*`, locks, activity)
+- `datadog` schema with `explain_statement()` function for query plan collection
+- `SELECT` on all public tables for DBM query samples
+
+The Agent collects via [Autodiscovery](https://docs.datadoghq.com/database_monitoring/setup_postgres/) labels (local) or `postgres.d/conf.yaml` (EC2/RDS).
+
+**Redis (ElastiCache / local)**
+
+No special user needed -- Redis is monitored via the `redisdb` check.
+The Agent collects: memory usage, connected clients, evicted keys, hit/miss rates, command latency, and slowlog.
+
+Configured via Autodiscovery labels (local) or `redisdb.d/conf.yaml` (EC2 → ElastiCache).
+
+**Where the Agent runs:**
+- **Local**: The `dd-agent` container auto-discovers PostgreSQL and Redis via Docker labels
+- **AWS**: The Datadog Agent on the EC2 instance monitors both RDS and ElastiCache (Agent config in EC2 UserData)
+
 ### Docker Compose (local)
 
-Datadog Agent uses UDS sockets (`DD_APM_RECEIVER_SOCKET=/var/run/datadog/apm.socket`). All services mount the shared `dd-sockets` volume.
+Datadog Agent uses UDS sockets (`DD_APM_RECEIVER_SOCKET=/var/run/datadog/apm.socket`). All services mount the shared `dd-sockets` volume. Database containers have Autodiscovery labels for automatic DBM setup.
 
 ## Quick Start
 
@@ -145,7 +173,10 @@ cp .env.local .env
 docker-compose up -d
 ```
 
-Frontend at http://localhost:3000
+- Frontend: http://localhost:3000
+- Swagger UI: http://localhost:8888
+- PostgreSQL: `localhost:5432` (user: rumshop / rumshop)
+- Redis: `localhost:6379`
 
 ### Run locally
 

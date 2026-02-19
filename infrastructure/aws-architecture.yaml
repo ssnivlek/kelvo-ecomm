@@ -241,10 +241,11 @@ Resources:
   RedisSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: ElastiCache Redis — access from ECS
+      GroupDescription: ElastiCache Redis — access from ECS and EC2 (Agent monitoring)
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - { IpProtocol: tcp, FromPort: 6379, ToPort: 6379, SourceSecurityGroupId: !Ref ECSSecurityGroup }
+        - { IpProtocol: tcp, FromPort: 6379, ToPort: 6379, SourceSecurityGroupId: !Ref EC2SecurityGroup }
 
   # ────────────────────────────────────────────────────────────
   # IAM Roles
@@ -341,6 +342,38 @@ Resources:
               enabled: true
           logs_enabled: true
           DDCFG
+
+          # Configure Datadog Agent for RDS PostgreSQL DBM
+          cat > /etc/datadog-agent/conf.d/postgres.d/conf.yaml <<PGCFG
+          init_config:
+          instances:
+            - host: ${RDSInstance.Endpoint.Address}
+              port: 5432
+              username: datadog
+              password: datadog
+              dbname: rumshop
+              dbm: true
+              collect_activity_metrics: true
+              collect_database_size_metrics: true
+              reported_hostname: ${AWS::StackName}-postgres
+              tags:
+                - env:${Environment}
+                - service:rum-shop-postgres
+                - team:rumshop
+          PGCFG
+
+          # Configure Datadog Agent for ElastiCache Redis
+          cat > /etc/datadog-agent/conf.d/redisdb.d/conf.yaml <<RDCFG
+          init_config:
+          instances:
+            - host: ${RedisCluster.RedisEndpoint.Address}
+              port: ${RedisCluster.RedisEndpoint.Port}
+              tags:
+                - env:${Environment}
+                - service:rum-shop-redis
+                - team:rumshop
+          RDCFG
+
           systemctl restart datadog-agent
 
           # Install Java 17

@@ -33,6 +33,12 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./infrastructure/postgres-init.sql:/docker-entrypoint-initdb.d/01-datadog.sql:ro
+    labels:
+      com.datadoghq.ad.check_names: '["postgres"]'
+      com.datadoghq.ad.init_configs: '[{}]'
+      com.datadoghq.ad.instances: '[{"host":"%%host%%","port":5432,"username":"datadog","password":"datadog","dbname":"rumshop","dbm":true,"collect_activity_metrics":true,"collect_database_size_metrics":true}]'
+      com.datadoghq.ad.logs: '[{"source":"postgresql","service":"rum-shop-postgres"}]'
     networks:
       - rumshop
     healthcheck:
@@ -52,6 +58,11 @@ services:
     volumes:
       - redisdata:/data
     command: redis-server --appendonly yes
+    labels:
+      com.datadoghq.ad.check_names: '["redisdb"]'
+      com.datadoghq.ad.init_configs: '[{}]'
+      com.datadoghq.ad.instances: '[{"host":"%%host%%","port":6379}]'
+      com.datadoghq.ad.logs: '[{"source":"redis","service":"rum-shop-redis"}]'
     networks:
       - rumshop
     healthcheck:
