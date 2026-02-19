@@ -1,0 +1,268 @@
+version: '3.9'
+
+# ================================================================
+# RUM Shop - Docker Compose (Local Development)
+# ================================================================
+# Datadog Agent uses UDS (Unix Domain Sockets) via /var/run/datadog
+# for APM trace collection — same pattern as ECS Fargate production.
+#
+# Usage:
+#   cp .env.local .env
+#   docker-compose up -d
+# ================================================================
+
+volumes:
+  dd-sockets:
+
+services:
+  # ────────────────────────────────────────────────────────────
+  # Datadog Agent (UDS sockets for APM)
+  # ────────────────────────────────────────────────────────────
+  datadog-agent:
+    image: gcr.io/datadoghq/agent:7
+    container_name: dd-agent
+    environment:
+      - DD_API_KEY=${DD_API_KEY:-your_datadog_api_key}
+      - DD_SITE=${DD_SITE:-datadoghq.com}
+      - DD_ENV=${DD_ENV:-local}
+      - DD_APM_ENABLED=true
+      - DD_APM_NON_LOCAL_TRAFFIC=true
+      - DD_APM_RECEIVER_SOCKET=/var/run/datadog/apm.socket
+      - DD_DOGSTATSD_SOCKET=/var/run/datadog/dsd.socket
+      - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_CONFIG_AUTO_MULTI_LINE_DETECTION=true
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+      - DD_CONTAINER_EXCLUDE_LOGS=name:dd-agent
+      - DD_PROCESS_AGENT_ENABLED=true
+    ports:
+      - "8126:8126"
+      - "8125:8125/udp"
+    volumes:
+      - dd-sockets:/var/run/datadog
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    networks:
+      - rumshop
+
+  # ────────────────────────────────────────────────────────────
+  # [EC2] Java Order Service — dd-java-agent via UDS
+  # ────────────────────────────────────────────────────────────
+  order-service:
+    build:
+      context: ./backend/java-order-service
+      dockerfile: Dockerfile
+    container_name: rum-shop-order-service
+    environment:
+      - DD_SERVICE=rum-shop-order-service
+      - DD_ENV=${DD_ENV:-local}
+      - DD_VERSION=1.0.0
+      - DD_TRACE_AGENT_URL=unix:///var/run/datadog/apm.socket
+      - DD_PROFILING_ENABLED=true
+      - DD_LOGS_INJECTION=true
+    ports:
+      - "8080:8080"
+    volumes:
+      - dd-sockets:/var/run/datadog
+    depends_on:
+      - datadog-agent
+    labels:
+      com.datadoghq.ad.logs: '[{"source":"java","service":"rum-shop-order-service"}]'
+    networks:
+      - rumshop
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ────────────────────────────────────────────────────────────
+  # [ECS Fargate] Node.js Cart — dd-trace/init via UDS
+  # ────────────────────────────────────────────────────────────
+  cart-service:
+    build:
+      context: ./backend/nodejs-lambdas
+      dockerfile: Dockerfile.cart
+    container_name: rum-shop-cart
+    environment:
+      - DD_SERVICE=rum-shop-cart
+      - DD_ENV=${DD_ENV:-local}
+      - DD_VERSION=1.0.0
+      - DD_TRACE_AGENT_URL=unix:///var/run/datadog/apm.socket
+      - PORT=3001
+    ports:
+      - "3001:3001"
+    volumes:
+      - dd-sockets:/var/run/datadog
+    depends_on:
+      - datadog-agent
+    labels:
+      com.datadoghq.ad.logs: '[{"source":"nodejs","service":"rum-shop-cart"}]'
+    networks:
+      - rumshop
+
+  # ────────────────────────────────────────────────────────────
+  # [ECS Fargate] Node.js Auth — dd-trace/init via UDS
+  # ────────────────────────────────────────────────────────────
+  auth-service:
+    build:
+      context: ./backend/nodejs-lambdas
+      dockerfile: Dockerfile.auth
+    container_name: rum-shop-auth
+    environment:
+      - DD_SERVICE=rum-shop-auth
+      - DD_ENV=${DD_ENV:-local}
+      - DD_VERSION=1.0.0
+      - DD_TRACE_AGENT_URL=unix:///var/run/datadog/apm.socket
+      - JWT_SECRET=${JWT_SECRET:-rum-shop-local-secret-key-2024}
+      - PORT=3002
+    ports:
+      - "3002:3002"
+    volumes:
+      - dd-sockets:/var/run/datadog
+    depends_on:
+      - datadog-agent
+    labels:
+      com.datadoghq.ad.logs: '[{"source":"nodejs","service":"rum-shop-auth"}]'
+    networks:
+      - rumshop
+
+  # ────────────────────────────────────────────────────────────
+  # [ECS Fargate] Node.js Payment — dd-trace/init via UDS
+  # ────────────────────────────────────────────────────────────
+  payment-service:
+    build:
+      context: ./backend/nodejs-lambdas
+      dockerfile: Dockerfile.payment
+    container_name: rum-shop-payment
+    environment:
+      - DD_SERVICE=rum-shop-payment
+      - DD_ENV=${DD_ENV:-local}
+      - DD_VERSION=1.0.0
+      - DD_TRACE_AGENT_URL=unix:///var/run/datadog/apm.socket
+      - PORT=3003
+    ports:
+      - "3003:3003"
+    volumes:
+      - dd-sockets:/var/run/datadog
+    depends_on:
+      - datadog-agent
+    labels:
+      com.datadoghq.ad.logs: '[{"source":"nodejs","service":"rum-shop-payment"}]'
+    networks:
+      - rumshop
+
+  # ────────────────────────────────────────────────────────────
+  # [Lambda] Python Search — ddtrace-run via UDS
+  # ────────────────────────────────────────────────────────────
+  search-service:
+    build:
+      context: ./backend/python-lambdas
+      dockerfile: Dockerfile.search
+    container_name: rum-shop-search
+    environment:
+      - DD_SERVICE=rum-shop-search
+      - DD_ENV=${DD_ENV:-local}
+      - DD_VERSION=1.0.0
+      - DD_TRACE_AGENT_URL=unix:///var/run/datadog/apm.socket
+      - PORT=3004
+    ports:
+      - "3004:3004"
+    volumes:
+      - dd-sockets:/var/run/datadog
+    depends_on:
+      - datadog-agent
+    labels:
+      com.datadoghq.ad.logs: '[{"source":"python","service":"rum-shop-search"}]'
+    networks:
+      - rumshop
+
+  # ────────────────────────────────────────────────────────────
+  # [Lambda] Python Recommendations — ddtrace-run via UDS
+  # ────────────────────────────────────────────────────────────
+  recommendations-service:
+    build:
+      context: ./backend/python-lambdas
+      dockerfile: Dockerfile.recommendations
+    container_name: rum-shop-recommendations
+    environment:
+      - DD_SERVICE=rum-shop-recommendations
+      - DD_ENV=${DD_ENV:-local}
+      - DD_VERSION=1.0.0
+      - DD_TRACE_AGENT_URL=unix:///var/run/datadog/apm.socket
+      - PORT=3005
+    ports:
+      - "3005:3005"
+    volumes:
+      - dd-sockets:/var/run/datadog
+    depends_on:
+      - datadog-agent
+    labels:
+      com.datadoghq.ad.logs: '[{"source":"python","service":"rum-shop-recommendations"}]'
+    networks:
+      - rumshop
+
+  # ────────────────────────────────────────────────────────────
+  # [Lambda] Python Notifications — ddtrace-run via UDS
+  # ────────────────────────────────────────────────────────────
+  notifications-service:
+    build:
+      context: ./backend/python-lambdas
+      dockerfile: Dockerfile.notifications
+    container_name: rum-shop-notifications
+    environment:
+      - DD_SERVICE=rum-shop-notifications
+      - DD_ENV=${DD_ENV:-local}
+      - DD_VERSION=1.0.0
+      - DD_TRACE_AGENT_URL=unix:///var/run/datadog/apm.socket
+      - PORT=3006
+    ports:
+      - "3006:3006"
+    volumes:
+      - dd-sockets:/var/run/datadog
+    depends_on:
+      - datadog-agent
+    labels:
+      com.datadoghq.ad.logs: '[{"source":"python","service":"rum-shop-notifications"}]'
+    networks:
+      - rumshop
+
+  # ────────────────────────────────────────────────────────────
+  # [S3+CloudFront] React Frontend
+  # ────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: rum-shop-frontend
+    environment:
+      - REACT_APP_DD_APPLICATION_ID=${DD_RUM_APPLICATION_ID:-rum-shop-app-id}
+      - REACT_APP_DD_CLIENT_TOKEN=${DD_RUM_CLIENT_TOKEN:-pub_rum_shop_client_token}
+      - REACT_APP_DD_SITE=${DD_SITE:-datadoghq.com}
+      - REACT_APP_DD_ENV=${DD_ENV:-local}
+      - REACT_APP_ORDER_API=http://localhost:8080
+      - REACT_APP_CART_API=http://localhost:3001
+      - REACT_APP_AUTH_API=http://localhost:3002
+      - REACT_APP_PAYMENT_API=http://localhost:3003
+      - REACT_APP_SEARCH_API=http://localhost:3004
+      - REACT_APP_RECOMMENDATIONS_API=http://localhost:3005
+      - REACT_APP_NOTIFICATIONS_API=http://localhost:3006
+    ports:
+      - "3000:80"
+    depends_on:
+      - order-service
+      - cart-service
+      - auth-service
+      - payment-service
+      - search-service
+      - recommendations-service
+      - notifications-service
+    networks:
+      - rumshop
+
+networks:
+  rumshop:
+    driver: bridge
