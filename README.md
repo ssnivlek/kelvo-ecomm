@@ -216,18 +216,9 @@ Key points:
 
 ## Databases — Setup Guide
 
-### Option 1: Docker Compose (Recommended for local development)
+### Local (Docker Compose)
 
-Everything starts automatically. Just run:
-
-```bash
-cp .env.local .env
-# Edit .env with your Datadog keys (see "Environment Variables" section below)
-
-docker-compose up -d
-```
-
-This brings up:
+Everything starts automatically with `./scripts/run-local.sh`. This brings up:
 - **PostgreSQL** on `localhost:5432` (database: `rumshop`, user: `rumshop`, password: `rumshop`)
 - **Redis** on `localhost:6379` (no password)
 - All backend services, pre-configured to connect to these databases
@@ -246,54 +237,7 @@ psql -h localhost -U rumshop -d rumshop
 redis-cli -h localhost -p 6379
 ```
 
-### Option 2: Run services locally without Docker
-
-If you prefer to run the backend processes directly (not in Docker), you still need PostgreSQL and Redis running. You can either:
-
-**a) Use Docker just for the databases:**
-
-```bash
-docker run -d --name rumshop-postgres \
-  -e POSTGRES_DB=rumshop \
-  -e POSTGRES_USER=rumshop \
-  -e POSTGRES_PASSWORD=rumshop \
-  -p 5432:5432 \
-  -v $(pwd)/infrastructure/postgres-init.sql:/docker-entrypoint-initdb.d/01-datadog.sql:ro \
-  postgres:16-alpine
-
-docker run -d --name rumshop-redis \
-  -p 6379:6379 \
-  redis:7-alpine redis-server --appendonly yes
-```
-
-**b) Use locally installed PostgreSQL and Redis:**
-
-```bash
-# Create the database and user
-createdb rumshop
-psql -d rumshop -c "CREATE USER rumshop WITH PASSWORD 'rumshop'; GRANT ALL ON DATABASE rumshop TO rumshop;"
-psql -d rumshop -f infrastructure/postgres-init.sql
-
-# Start Redis (brew install redis)
-redis-server --daemonize yes
-```
-
-Then start the backend services:
-
-```bash
-# Install dependencies
-cd backend/python-lambdas && pip install -r requirements.txt flask flask-cors && cd ../..
-cd backend/nodejs-lambdas && npm install && cd ../..
-cd frontend && npm install && cd ..
-
-# Start all backends (they connect to localhost:5432 and localhost:6379)
-./scripts/run-local.sh
-
-# In another terminal, start the frontend
-cd frontend && npm start
-```
-
-### Option 3: AWS Deployment
+### AWS Deployment
 
 `./scripts/deploy-aws.sh` creates everything via CloudFormation:
 
@@ -597,7 +541,11 @@ Docs:
 
 ## Quick Start
 
-### Docker Compose (everything in one command)
+There are only two ways to run this app: **locally with Docker** or **deployed to AWS**. No local Java, Node, or Python installation needed for either.
+
+### Option 1: Run locally with Docker
+
+Prerequisites: [Docker Desktop](https://www.docker.com/products/docker-desktop) installed and running.
 
 ```bash
 # 1. Copy the environment template
@@ -608,10 +556,14 @@ cp .env.local .env
 #    REACT_APP_DD_APPLICATION_ID → from your RUM app page
 #    REACT_APP_DD_CLIENT_TOKEN   → from your RUM app page
 
-# 3. Start everything
-docker-compose up -d
+# 3. Start everything (databases, backends, frontend)
+./scripts/run-local.sh
 
-# 4. Wait ~30 seconds for databases and services to start
+# 4. Other commands:
+./scripts/run-local.sh stop        # Stop all containers
+./scripts/run-local.sh status      # Show container status
+./scripts/run-local.sh logs        # Tail all logs
+./scripts/run-local.sh logs frontend  # Tail logs for one service
 ```
 
 | What | URL |
@@ -627,27 +579,25 @@ docker-compose up -d
 | PostgreSQL | `localhost:5432` (user: `rumshop`, password: `rumshop`) |
 | Redis | `localhost:6379` |
 
-### Deploy to AWS
+### Option 2: Deploy to AWS
+
+Prerequisites: [AWS CLI](https://aws.amazon.com/cli/) installed and configured (`aws configure`).
 
 ```bash
-# 1. Make sure AWS CLI is configured
-aws configure
-# Set your region, access key, secret key
-
-# 2. Copy and fill in the AWS environment file
+# 1. Copy and fill in the AWS environment file
 cp .env.aws .env
-# Set all required values (see the "Environment Variables" section)
+# Edit .env: set ALL <YOUR_...> values (see "Environment Variables" below)
 
-# 3. Deploy (takes ~15-20 minutes the first time)
+# 2. Deploy (takes ~15-20 minutes the first time)
 ./scripts/deploy-aws.sh
 
-# 4. After deploy: create the Datadog DBM user on RDS
+# 3. After deploy: create the Datadog DBM user on RDS
 #    (the deploy script prints the exact command to run)
 
-# 5. Enable Lambda Remote Instrumentation in the Datadog UI
+# 4. Enable Lambda Remote Instrumentation in the Datadog UI
 #    (see "Python APM" section above)
 
-# 6. When you're done, tear everything down:
+# 5. When you're done, tear everything down:
 ./scripts/teardown-aws.sh
 ```
 

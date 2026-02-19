@@ -43,3 +43,5 @@ samconfig.toml
 
 # Logs
 *.log
+.pids/
+.logs/
