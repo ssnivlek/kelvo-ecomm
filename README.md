@@ -7,45 +7,40 @@ E-commerce application with polyglot microservices on AWS. Full observability wi
 ## Architecture
 
 ```
-                    ┌──────────────────────┐
-                    │  S3 + CloudFront     │
-                    │  React SPA           │
-                    │  Datadog RUM         │
-                    └──────────┬───────────┘
-                               │
-              ┌────────────────┼───────────────┐
-              │                │               │
-              ▼                ▼               ▼
-     ┌─────────────┐  ┌──────────────┐  ┌───────────┐
-     │     ALB     │  │     ALB      │  │ API GW    │
-     │  /products  │  │ /cart /auth  │  │ /search   │
-     │  /orders    │  │ /payment     │  │ /recs     │
-     └──────┬──────┘  └──────┬───────┘  └─────┬─────┘
-            │                │               │
-            ▼                ▼               ▼
-     ┌──────────────┐ ┌─────────────┐ ┌───────────────┐
-     │  EC2         │ │ ECS Fargate │ │ Lambda        │
-     │  t3.large    │ │ 512/1024    │ │ Python 3.11   │
-     │  Java 17     │ │ Node.js 20  │ │               │
-     │  Spring Boot │ │ dd-trace    │ │ Remote Instr. │
-     │  dd-java-    │ │ UDS sockets │ │ (Datadog UI)  │
-     │  agent       │ │ Firelens    │ │               │
-     └──────┬───────┘ └──────┬──────┘ └───────────────┘
-            │                │
-     ┌──────┴───────┐ ┌─────┴──────┐
-     │  PostgreSQL  │ │   Redis    │
-     │  RDS         │ │ ElastiCache│
-     │  (orders,    │ │ (carts,    │
-     │   users)     │ │  payments) │
-     └──────────────┘ └────────────┘
-            │                │
-            └────────┬───────┘
-                     ▼
-            ┌──────────────────┐
-            │  Datadog Agent   │
-            │  APM · Logs · DBM│
-            │  Metrics · FinOps│
-            └──────────────────┘
+          S3 + CloudFront
+          React SPA + RUM
+                |
+     +----------+----------+
+     |          |          |
+     v          v          v
+  +------+  +-------+  +--------+
+  | ALB  |  |  ALB  |  | API GW |
+  | /prod |  | /cart |  | /search|
+  | /order|  | /auth |  | /recs  |
+  +---+---+  | /pay  |  | /notif |
+      |      +---+---+  +---+----+
+      v          v          v
+  +--------+ +--------+ +---------+
+  | EC2    | | ECS    | | Lambda  |
+  | Java17 | | Node20 | | Py 3.11 |
+  | Spring | | ddtrace| | Remote  |
+  | dd-java| | UDS    | | Instr.  |
+  +---+----+ +---+----+ +---------+
+      |          |
+  +---v----+ +---v-------+
+  | PG 16  | | Redis 7   |
+  | RDS    | | ElastiCache|
+  | orders | | carts     |
+  | users  | | payments  |
+  +---+----+ +---+-------+
+      |          |
+      +----+-----+
+           v
+    +-------------+
+    | DD Agent    |
+    | APM Logs DBM|
+    | Metrics     |
+    +-------------+
 ```
 
 ---
@@ -96,24 +91,24 @@ Where `<host>` is:
 All containers run on a single Docker network called `rumshop`. Services reference each other by container name:
 
 ```
-┌─ Docker Network: rumshop ────────────────────────────────────┐
-│                                                              │
-│  frontend:3000 ──→ order-service:8080                       │
-│                ──→ cart-service:3001                         │
-│                ──→ auth-service:3002                         │
-│                ──→ payment-service:3003                      │
-│                                                              │
-│  order-service:8080 ──→ postgres:5432                       │
-│  auth-service:3002  ──→ postgres:5432                       │
-│  cart-service:3001  ──→ redis:6379                           │
-│  payment-service:3003 ──→ redis:6379                        │
-│                                                              │
-│  dd-agent ──→ postgres:5432 (DBM via Autodiscovery labels)  │
-│           ──→ redis:6379    (Redis check via Autodiscovery)  │
-│           ←── all services via /var/run/datadog/apm.socket  │
-│                                                              │
-│  swagger-ui:8888  (OpenAPI docs)                            │
-└──────────────────────────────────────────────────────────────┘
+Docker Network: rumshop
+========================
+
+frontend:3000 --> order-service:8080
+              --> cart-service:3001
+              --> auth-service:3002
+              --> payment-service:3003
+
+order-service:8080  --> postgres:5432
+auth-service:3002   --> postgres:5432
+cart-service:3001   --> redis:6379
+payment-service:3003 -> redis:6379
+
+dd-agent --> postgres:5432 (DBM Autodiscovery)
+         --> redis:6379    (Redis Autodiscovery)
+         <-- all services via /var/run/datadog/apm.socket
+
+swagger-ui:8888 (OpenAPI docs)
 ```
 
 Every container exposes its port to `localhost` for direct access. Inside Docker, services use the container name as hostname (e.g., `postgres`, `redis`).
@@ -123,50 +118,47 @@ Every container exposes its port to `localhost` for direct access. Inside Docker
 The CloudFormation template creates a dedicated VPC with public and private subnets:
 
 ```
-┌─ VPC 10.0.0.0/16 ──────────────────────────────────────────────────────────┐
-│                                                                             │
-│  ┌─ Public Subnets ──────────────────────────────────────────────────────┐  │
-│  │  10.0.1.0/24 (AZ-a)                10.0.2.0/24 (AZ-b)               │  │
-│  │                                                                       │  │
-│  │  ┌── ALB ──────────┐    ┌── EC2 ──────────────────────┐             │  │
-│  │  │  :80 → backends  │    │  t3.large (Java Order Svc) │             │  │
-│  │  │  /api/products → │────│→ :8080                     │             │  │
-│  │  │  /api/orders   → │    │  Datadog Agent installed   │             │  │
-│  │  │  /api/cart     → │──┐ │  ├─ APM (dd-java-agent)    │             │  │
-│  │  │  /api/auth     → │──┤ │  ├─ DBM → RDS PostgreSQL   │             │  │
-│  │  │  /api/payment  → │──┤ │  └─ Redis → ElastiCache    │             │  │
-│  │  └──────────────────┘  │ └────────────────────────────┘             │  │
-│  │                        │                                             │  │
-│  │  ┌── NAT Gateway ──┐  │  ┌── Internet Gateway ──┐                  │  │
-│  │  │  (for private    │  │  │  (public internet    │                  │  │
-│  │  │   subnet access) │  │  │   access)            │                  │  │
-│  │  └──────────────────┘  │  └──────────────────────┘                  │  │
-│  └────────────────────────┼──────────────────────────────────────────────┘  │
-│                           │                                                 │
-│  ┌─ Private Subnets ─────┼──────────────────────────────────────────────┐  │
-│  │  10.0.3.0/24 (AZ-a)   │            10.0.4.0/24 (AZ-b)               │  │
-│  │                        │                                              │  │
-│  │  ┌── ECS Fargate ─────┼──────────────────────┐                      │  │
-│  │  │  Cart   :3001  ←───┤                      │                      │  │
-│  │  │  Auth   :3002  ←───┤  (ALB routes here)   │                      │  │
-│  │  │  Payment:3003  ←───┘                      │                      │  │
-│  │  │  + Datadog Agent sidecar per task          │                      │  │
-│  │  │  + Firelens (fluent-bit) for logs          │                      │  │
-│  │  └────────────────┬──────────────┬────────────┘                      │  │
-│  │                   │              │                                    │  │
-│  │  ┌── RDS ─────────┴──┐  ┌── ElastiCache ────┴──┐                   │  │
-│  │  │  PostgreSQL 16     │  │  Redis 7              │                   │  │
-│  │  │  db.t3.medium      │  │  cache.t3.small       │                   │  │
-│  │  │  :5432             │  │  :6379                 │                   │  │
-│  │  │  NOT public        │  │  NOT public            │                   │  │
-│  │  └────────────────────┘  └────────────────────────┘                   │  │
-│  └───────────────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────────┘
+VPC 10.0.0.0/16
+================
 
-API Gateway (HTTP) ──→ Lambda functions (Search, Recommendations, Notifications)
-  (outside VPC — no DB access needed)
+PUBLIC SUBNETS (10.0.1.0/24, 10.0.2.0/24)
++-----------------+   +------------------------+
+| ALB :80         |   | EC2 (t3.large)         |
+| /api/products --+-->| Java Order Svc :8080   |
+| /api/orders   --+-->|                        |
+| /api/cart     --+-+>| Datadog Agent:         |
+| /api/auth     --+-+>|  - APM (dd-java-agent) |
+| /api/payment  --+-+>|  - DBM -> RDS          |
++-----------------+ |  |  - Redis -> ElastiCache|
+                    |  +------------------------+
++------------+  +---+----------+
+| NAT GW     |  | Internet GW  |
+| (priv->out)|  | (public in)  |
++------------+  +--------------+
 
-S3 + CloudFront ──→ React SPA (static files)
+PRIVATE SUBNETS (10.0.3.0/24, 10.0.4.0/24)
++----------------------------+
+| ECS Fargate                |
+|  Cart    :3001  <-- ALB    |
+|  Auth    :3002  <-- ALB    |
+|  Payment :3003  <-- ALB    |
+|  + DD Agent sidecar / task |
+|  + Firelens (logs)         |
++--------+----------+-------+
+         |          |
++--------v---+  +---v-----------+
+| RDS        |  | ElastiCache   |
+| PG 16      |  | Redis 7       |
+| db.t3.med  |  | cache.t3.sml  |
+| :5432      |  | :6379         |
+| NOT public |  | NOT public    |
++------------+  +---------------+
+
+OUTSIDE VPC
++----------------------------------------------+
+| API Gateway -> Lambda (Search, Recs, Notif.) |
+| S3 + CloudFront -> React SPA                 |
++----------------------------------------------+
 ```
 
 ### Security Groups (who can talk to whom)
