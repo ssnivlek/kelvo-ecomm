@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="tshirt-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#1e40af"/>
+    </linearGradient>
+    <linearGradient id="tshirt-body" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e40af"/>
+      <stop offset="50%" style="stop-color:#1d4ed8"/>
+      <stop offset="100%" style="stop-color:#1e3a8a"/>
+    </linearGradient>
+    <pattern id="tshirt-pattern" patternUnits="userSpaceOnUse" width="20" height="20">
+      <circle cx="10" cy="10" r="1" fill="#3b82f6" opacity="0.3"/>
+    </pattern>
+    <filter id="tshirt-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <rect width="400" height="400" rx="80" fill="url(#tshirt-bg)"/>
+  <g filter="url(#tshirt-shadow)" transform="translate(200, 200)">
+    <!-- T-shirt body -->
+    <path d="M-80 -60 L-80 80 L-40 90 L-40 70 L40 70 L40 90 L80 80 L80 -60 L50 -50 L30 -60 L0 -70 L-30 -60 L-50 -50 Z" fill="url(#tshirt-body)"/>
+    <path d="M-80 -60 L-80 80 L-40 90 L-40 70 L40 70 L40 90 L80 80 L80 -60 L50 -50 L30 -60 L0 -70 L-30 -60 L-50 -50 Z" fill="url(#tshirt-pattern)"/>
+    <!-- Neckline -->
+    <ellipse cx="0" cy="-55" rx="25" ry="15" fill="#0f172a"/>
+    <!-- Sleeve folds -->
+    <path d="M-75 -40 Q-60 -50 -45 -45" stroke="#3b82f6" stroke-width="3" fill="none" opacity="0.5"/>
+    <path d="M75 -40 Q60 -50 45 -45" stroke="#3b82f6" stroke-width="3" fill="none" opacity="0.5"/>
+  </g>
+</svg>

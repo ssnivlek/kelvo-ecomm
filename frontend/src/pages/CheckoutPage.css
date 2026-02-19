@@ -1,0 +1,194 @@
+.checkout-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 968px) {
+  .checkout-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.checkout-form-section h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-navy);
+  margin: 0 0 1rem;
+}
+
+.checkout-form-section h2:not(:first-of-type) {
+  margin-top: 2rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+}
+
+.form-group input {
+  width: 100%;
+}
+
+.summary-card {
+  position: sticky;
+  top: 100px;
+  padding: 1.5rem;
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.summary-card h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-navy);
+  margin: 0 0 1rem;
+}
+
+.summary-items {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.summary-item img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+}
+
+.summary-item div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.summary-item div span:first-child {
+  font-weight: 500;
+  font-size: 0.9375rem;
+}
+
+.summary-item div span:last-child {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.summary-item > span:last-child {
+  font-weight: 600;
+  color: var(--color-coral);
+}
+
+.summary-totals {
+  padding: 1rem 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.summary-totals div {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.35rem 0;
+  font-size: 0.9375rem;
+}
+
+.summary-totals .total-row {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-navy);
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 2px solid var(--color-border);
+}
+
+.place-order-btn {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  margin-top: 1rem;
+}
+
+.checkout-empty,
+.checkout-processing,
+.checkout-success,
+.checkout-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.checkout-processing .spinner {
+  margin-bottom: 0.5rem;
+}
+
+.checkout-success .success-icon {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: white;
+  background: var(--color-success);
+  border-radius: 50%;
+  animation: successPop 0.5s ease;
+}
+
+@keyframes successPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.checkout-error p {
+  color: var(--color-coral);
+  margin: 0;
+}

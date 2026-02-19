@@ -1,0 +1,79 @@
+.order-confirmation-page {
+  display: flex;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.confirmation-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem 2rem;
+}
+
+.confirmation-loading p {
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.confirmation-card {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.success-checkmark {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: white;
+  background: var(--color-success);
+  border-radius: 50%;
+}
+
+.confirmation-card h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-navy);
+  margin: 0 0 0.5rem;
+}
+
+.confirmation-message {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  margin: 0 0 1.5rem;
+}
+
+.order-summary {
+  padding: 1rem;
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+}
+
+.order-number {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-navy);
+  margin: 0 0 0.25rem;
+}
+
+.order-total {
+  font-size: 1rem;
+  color: var(--color-coral);
+  font-weight: 600;
+  margin: 0;
+}
+
+.confirmation-card .btn {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+}

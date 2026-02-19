@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="watch-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#0d9488"/>
+    </linearGradient>
+    <linearGradient id="watch-face" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e293b"/>
+    </linearGradient>
+    <linearGradient id="watch-band" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#334155"/>
+      <stop offset="100%" style="stop-color:#1e293b"/>
+    </linearGradient>
+    <filter id="watch-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <rect width="400" height="400" rx="80" fill="url(#watch-bg)"/>
+  <g filter="url(#watch-shadow)" transform="translate(200, 200)">
+    <!-- Watch band top -->
+    <rect x="-35" y="-95" width="70" height="45" rx="8" fill="url(#watch-band)"/>
+    <!-- Watch face -->
+    <circle cx="0" cy="-25" r="55" fill="url(#watch-face)" stroke="#0d9488" stroke-width="4"/>
+    <circle cx="0" cy="-25" r="48" fill="#0f172a"/>
+    <!-- Screen content -->
+    <text x="0" y="-18" text-anchor="middle" fill="#14b8a6" font-size="20" font-family="system-ui,sans-serif" font-weight="bold">9:41</text>
+    <circle cx="-15" cy="-35" r="3" fill="#14b8a6"/>
+    <circle cx="0" cy="-35" r="3" fill="#14b8a6"/>
+    <circle cx="15" cy="-35" r="3" fill="#14b8a6"/>
+    <!-- Watch band bottom -->
+    <rect x="-35" y="30" width="70" height="45" rx="8" fill="url(#watch-band)"/>
+    <!-- Crown -->
+    <circle cx="45" cy="-45" r="8" fill="#334155" stroke="#0d9488" stroke-width="2"/>
+  </g>
+</svg>

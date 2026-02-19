@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="shoes-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fb923c"/>
+      <stop offset="100%" style="stop-color:#f97316"/>
+    </linearGradient>
+    <linearGradient id="shoes-body" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fdba74"/>
+      <stop offset="40%" style="stop-color:#fb923c"/>
+      <stop offset="100%" style="stop-color:#ea580c"/>
+    </linearGradient>
+    <linearGradient id="shoes-sole" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#78716c"/>
+      <stop offset="100%" style="stop-color:#57534e"/>
+    </linearGradient>
+    <filter id="shoes-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <rect width="400" height="400" rx="80" fill="url(#shoes-bg)"/>
+  <g filter="url(#shoes-shadow)" transform="translate(200, 200) rotate(-15)">
+    <!-- Shoe sole -->
+    <path d="M-90 50 L-85 55 L70 55 L85 45 L90 35 L85 25 L70 15 L-70 15 L-85 25 L-90 35 Z" fill="url(#shoes-sole)"/>
+    <!-- Shoe body -->
+    <path d="M-80 20 L-75 5 L-60 -20 L-40 -35 L0 -45 L40 -35 L60 -20 L75 5 L80 20 L75 35 L60 45 L40 50 L0 52 L-40 50 L-60 45 L-75 35 Z" fill="url(#shoes-body)"/>
+    <!-- Toe cap -->
+    <path d="M-75 5 L-60 -20 L-40 -35 L0 -45 L40 -35 L60 -20 L75 5" stroke="#ea580c" stroke-width="4" fill="none"/>
+    <!-- Laces area -->
+    <path d="M-30 -15 L30 -15 L35 0 L30 15 L-30 15 L-35 0 Z" fill="#fef3c7"/>
+    <line x1="-25" y1="-5" x2="25" y2="-5" stroke="#fbbf24" stroke-width="2"/>
+    <line x1="-25" y1="5" x2="25" y2="5" stroke="#fbbf24" stroke-width="2"/>
+    <!-- Heel accent -->
+    <path d="M-80 20 L-75 35 L-60 45" stroke="#ea580c" stroke-width="3" fill="none"/>
+  </g>
+</svg>

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="headphones-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c3aed"/>
+      <stop offset="100%" style="stop-color:#2563eb"/>
+    </linearGradient>
+    <linearGradient id="headphones-band" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#a78bfa"/>
+      <stop offset="100%" style="stop-color:#6366f1"/>
+    </linearGradient>
+    <linearGradient id="headphones-cup" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6"/>
+      <stop offset="50%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#4f46e5"/>
+    </linearGradient>
+    <filter id="headphones-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <rect width="400" height="400" rx="80" fill="url(#headphones-bg)"/>
+  <g filter="url(#headphones-shadow)" transform="translate(200, 200)">
+    <!-- Headband -->
+    <path d="M-90 -40 Q-90 -90 0 -90 Q90 -90 90 -40" stroke="url(#headphones-band)" stroke-width="18" fill="none" stroke-linecap="round"/>
+    <!-- Left cup -->
+    <ellipse cx="-95" cy="20" rx="45" ry="55" fill="url(#headphones-cup)"/>
+    <ellipse cx="-95" cy="20" rx="35" ry="42" fill="#1e1b4b"/>
+    <ellipse cx="-95" cy="20" rx="25" ry="30" fill="#312e81"/>
+    <!-- Right cup -->
+    <ellipse cx="95" cy="20" rx="45" ry="55" fill="url(#headphones-cup)"/>
+    <ellipse cx="95" cy="20" rx="35" ry="42" fill="#1e1b4b"/>
+    <ellipse cx="95" cy="20" rx="25" ry="30" fill="#312e81"/>
+    <!-- Connectors -->
+    <rect x="-95" y="-25" width="12" height="50" rx="6" fill="url(#headphones-band)"/>
+    <rect x="83" y="-25" width="12" height="50" rx="6" fill="url(#headphones-band)"/>
+  </g>
+</svg>
