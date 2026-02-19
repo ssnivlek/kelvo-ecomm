@@ -1,0 +1,43 @@
+service: rum-shop-auth
+
+frameworkVersion: '3'
+
+package:
+  patterns:
+    - 'handler.js'
+    - '../shared/**'
+    - '../node_modules/**'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ${opt:region, 'us-east-1'}
+  environment:
+    DD_SERVICE: rum-shop-auth
+    DD_ENV: ${opt:stage, 'production'}
+    DD_VERSION: '1.0.0'
+    JWT_SECRET: ${env:JWT_SECRET, 'rum-shop-secret-key-2024'}
+    NODE_OPTIONS: '--enable-source-maps'
+  layers:
+    - arn:aws:lambda:${aws:region}:464622532012:layer:Datadog-Node20-x:${env:DD_NODE_LAYER_VERSION, '65'}
+
+functions:
+  auth:
+    handler: handler.handler
+    description: RUM Shop Auth API - register, login, profile
+    events:
+      # POST /api/auth/register
+      - http:
+          path: api/auth/register
+          method: post
+      # POST /api/auth/login
+      - http:
+          path: api/auth/login
+          method: post
+      # GET /api/auth/profile
+      - http:
+          path: api/auth/profile
+          method: get
+    tags:
+      service: rum-shop-auth
+      project: rum-shop

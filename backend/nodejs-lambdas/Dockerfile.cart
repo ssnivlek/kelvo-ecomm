@@ -1,0 +1,104 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN npm ci
+RUN npm install dd-trace --no-save
+
+COPY shared/ shared/
+COPY cart/ cart/
+
+COPY <<'RUNNER' server.js
+const http = require('http');
+const { handler } = require('./cart/handler');
+
+const PORT = process.env.PORT || 3001;
+
+function parseBody(req) {
+  return new Promise((resolve) => {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try { resolve(JSON.parse(body)); } catch { resolve(null); }
+    });
+  });
+}
+
+function makeEvent(method, path, queryParams, body, pathParams) {
+  return {
+    httpMethod: method,
+    path,
+    queryStringParameters: queryParams || {},
+    pathParameters: pathParams || {},
+    body: body ? JSON.stringify(body) : null,
+    headers: {},
+  };
+}
+
+function sendResponse(res, lambdaResult) {
+  const headers = lambdaResult.headers || {};
+  headers['Content-Type'] = 'application/json';
+  res.writeHead(lambdaResult.statusCode, headers);
+  res.end(lambdaResult.body);
+}
+
+const server = http.createServer(async (req, res) => {
+  const url = new URL(req.url, `http://localhost:${PORT}`);
+  const method = req.method;
+  const path = url.pathname;
+
+  if (method === 'OPTIONS') {
+    res.writeHead(200, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    });
+    return res.end();
+  }
+
+  if (path === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ status: 'healthy', service: 'rum-shop-cart' }));
+  }
+
+  try {
+    const body = await parseBody(req);
+
+    if (method === 'POST' && path === '/api/cart/add') {
+      return sendResponse(res, await handler(makeEvent('POST', path, null, body), {}));
+    }
+    if (method === 'PUT' && path === '/api/cart/update') {
+      return sendResponse(res, await handler(makeEvent('PUT', path, null, body), {}));
+    }
+
+    const cartMatch = path.match(/^\/api\/cart\/([^/]+)$/);
+    if (cartMatch) {
+      const sessionId = cartMatch[1];
+      if (method === 'GET') {
+        return sendResponse(res, await handler(makeEvent('GET', path, null, null, { sessionId }), {}));
+      }
+      if (method === 'DELETE') {
+        return sendResponse(res, await handler(makeEvent('DELETE', path, null, null, { sessionId }), {}));
+      }
+    }
+
+    const removeMatch = path.match(/^\/api\/cart\/([^/]+)\/item\/([^/]+)$/);
+    if (removeMatch && method === 'DELETE') {
+      const [, sessionId, productId] = removeMatch;
+      return sendResponse(res, await handler(makeEvent('DELETE', path, null, null, { sessionId, productId }), {}));
+    }
+
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Not found' }));
+  } catch (err) {
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: err.message }));
+  }
+});
+
+server.listen(PORT, () => console.log(`Cart service running on port ${PORT}`));
+RUNNER
+
+EXPOSE 3001
+CMD ["sh", "-c", "NODE_OPTIONS='--require=dd-trace/init' node server.js"]

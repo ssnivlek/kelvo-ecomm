@@ -1,0 +1,75 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN npm ci
+RUN npm install dd-trace --no-save
+
+COPY shared/ shared/
+COPY payment/ payment/
+
+COPY <<'RUNNER' server.js
+const http = require('http');
+const { handler } = require('./payment/handler');
+
+const PORT = process.env.PORT || 3003;
+
+function parseBody(req) {
+  return new Promise((resolve) => {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try { resolve(JSON.parse(body)); } catch { resolve(null); }
+    });
+  });
+}
+
+function sendResponse(res, lambdaResult) {
+  const headers = lambdaResult.headers || {};
+  headers['Content-Type'] = 'application/json';
+  res.writeHead(lambdaResult.statusCode, headers);
+  res.end(lambdaResult.body);
+}
+
+const server = http.createServer(async (req, res) => {
+  const url = new URL(req.url, `http://localhost:${PORT}`);
+  const method = req.method;
+  const path = url.pathname;
+
+  if (method === 'OPTIONS') {
+    res.writeHead(200, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    });
+    return res.end();
+  }
+
+  if (path === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ status: 'healthy', service: 'rum-shop-payment' }));
+  }
+
+  try {
+    const body = await parseBody(req);
+    const event = {
+      httpMethod: method,
+      path,
+      body: body ? JSON.stringify(body) : null,
+      headers: {},
+    };
+
+    const result = await handler(event, {});
+    sendResponse(res, result);
+  } catch (err) {
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: err.message }));
+  }
+});
+
+server.listen(PORT, () => console.log(`Payment service running on port ${PORT}`));
+RUNNER
+
+EXPOSE 3003
+CMD ["sh", "-c", "NODE_OPTIONS='--require=dd-trace/init' node server.js"]

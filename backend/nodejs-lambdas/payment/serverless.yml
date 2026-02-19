@@ -1,0 +1,42 @@
+service: rum-shop-payment
+
+frameworkVersion: '3'
+
+package:
+  patterns:
+    - 'handler.js'
+    - '../shared/**'
+    - '../node_modules/**'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ${opt:region, 'us-east-1'}
+  environment:
+    DD_SERVICE: rum-shop-payment
+    DD_ENV: ${opt:stage, 'production'}
+    DD_VERSION: '1.0.0'
+    NODE_OPTIONS: '--enable-source-maps'
+  layers:
+    - arn:aws:lambda:${aws:region}:464622532012:layer:Datadog-Node20-x:${env:DD_NODE_LAYER_VERSION, '65'}
+
+functions:
+  payment:
+    handler: handler.handler
+    description: RUM Shop Payment API - create intent, confirm, webhook (mock Stripe)
+    events:
+      # POST /api/payment/create-intent
+      - http:
+          path: api/payment/create-intent
+          method: post
+      # POST /api/payment/confirm
+      - http:
+          path: api/payment/confirm
+          method: post
+      # POST /api/payment/webhook
+      - http:
+          path: api/payment/webhook
+          method: post
+    tags:
+      service: rum-shop-payment
+      project: rum-shop
