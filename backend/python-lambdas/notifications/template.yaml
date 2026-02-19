@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: RUM Shop - Order Notification Lambda
+
+Parameters:
+  DatadogApiKeySecretArn:
+    Type: String
+    Description: ARN of the secret containing DD_API_KEY (optional for tracing)
+  Environment:
+    Type: String
+    Default: production
+  Version:
+    Type: String
+    Default: "1.0.0"
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 256
+    Runtime: python3.11
+
+Resources:
+  NotificationsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: rum-shop-notifications
+      Handler: notifications.handler.handler
+      CodeUri: ../
+      Layers:
+        - !Sub "arn:aws:lambda:${AWS::Region}:464622532012:layer:Datadog-Python311:122"
+      Environment:
+        Variables:
+          DD_SERVICE: rum-shop-notifications
+          DD_ENV: !Ref Environment
+          DD_VERSION: !Ref Version
+          DD_TRACE_ENABLED: "true"
+          DD_SITE: datadoghq.com
+      Events:
+        OrderConfirmation:
+          Type: Api
+          Properties:
+            Path: /api/notifications/order-confirmation
+            Method: POST
+        OrderConfirmationOptions:
+          Type: Api
+          Properties:
+            Path: /api/notifications/order-confirmation
+            Method: OPTIONS
+        ShippingUpdate:
+          Type: Api
+          Properties:
+            Path: /api/notifications/shipping-update
+            Method: POST
+        ShippingUpdateOptions:
+          Type: Api
+          Properties:
+            Path: /api/notifications/shipping-update
+            Method: OPTIONS
+        Health:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: GET
+        HealthOptions:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: OPTIONS
+
+Outputs:
+  OrderConfirmationUrl:
+    Description: API Gateway URL for order confirmation
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/api/notifications/order-confirmation"
+  ShippingUpdateUrl:
+    Description: API Gateway URL for shipping update
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/api/notifications/shipping-update"
+  HealthUrl:
+    Description: Health check URL
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/health"

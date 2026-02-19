@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: RUM Shop - Product Search Lambda
+
+Parameters:
+  DatadogApiKeySecretArn:
+    Type: String
+    Description: ARN of the secret containing DD_API_KEY (optional for tracing)
+  Environment:
+    Type: String
+    Default: production
+  Version:
+    Type: String
+    Default: "1.0.0"
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 256
+    Runtime: python3.11
+
+Resources:
+  SearchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: rum-shop-search
+      Handler: search.handler.handler
+      CodeUri: ../
+      Layers:
+        - !Sub "arn:aws:lambda:${AWS::Region}:464622532012:layer:Datadog-Python311:122"
+      Environment:
+        Variables:
+          DD_SERVICE: rum-shop-search
+          DD_ENV: !Ref Environment
+          DD_VERSION: !Ref Version
+          DD_TRACE_ENABLED: "true"
+          DD_SITE: datadoghq.com
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /api/search
+            Method: GET
+        ApiOptions:
+          Type: Api
+          Properties:
+            Path: /api/search
+            Method: OPTIONS
+        Health:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: GET
+        HealthOptions:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: OPTIONS
+
+Outputs:
+  SearchApiUrl:
+    Description: API Gateway URL for search
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/api/search"
+  HealthUrl:
+    Description: Health check URL
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/health"

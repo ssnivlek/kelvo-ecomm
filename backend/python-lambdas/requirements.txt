@@ -1,0 +1,5 @@
+ddtrace>=2.6.0
+datadog-lambda>=5.93.0
+aws-lambda-powertools>=2.31.0
+boto3>=1.34.0
+requests>=2.31.0

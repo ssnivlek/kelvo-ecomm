@@ -1,0 +1,47 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir flask flask-cors
+
+COPY shared/ shared/
+COPY notifications/ notifications/
+
+COPY <<'RUNNER' server.py
+import os, sys, json
+sys.path.insert(0, '/app')
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+from notifications.handler import handler
+
+app = Flask(__name__)
+CORS(app)
+
+def make_event(path, method, params=None, body=None):
+    return {
+        'httpMethod': method,
+        'path': path,
+        'queryStringParameters': params or {},
+        'body': json.dumps(body) if body else None,
+        'headers': dict(request.headers),
+    }
+
+@app.route('/api/notifications/<path:subpath>', methods=['POST', 'OPTIONS'])
+def notifications(subpath):
+    event = make_event(f'/api/notifications/{subpath}', 'POST', body=request.get_json(silent=True))
+    result = handler(event, {})
+    return app.response_class(result['body'], status=result['statusCode'],
+                              headers=result.get('headers', {}), mimetype='application/json')
+
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({'status': 'healthy', 'service': 'rum-shop-notifications'})
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 3006)))
+RUNNER
+
+EXPOSE 3006
+CMD ["ddtrace-run", "python", "server.py"]
