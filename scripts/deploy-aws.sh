@@ -30,7 +30,7 @@ set -a; source "$ENV_FILE"; set +a
 REQUIRED_VARS=(
   AWS_REGION AWS_ACCOUNT_ID DD_API_KEY DD_APP_KEY DD_SITE
   DD_RUM_APPLICATION_ID DD_RUM_CLIENT_TOKEN EC2_KEY_PAIR_NAME
-  EC2_INSTANCE_TYPE JWT_SECRET
+  EC2_INSTANCE_TYPE JWT_SECRET RDS_PASSWORD
 )
 for var in "${REQUIRED_VARS[@]}"; do
   val="${!var:-}"
@@ -52,7 +52,9 @@ echo "║  Stack:    ${STACK_NAME}"
 echo "║  Region:   ${AWS_REGION}"
 echo "║  Account:  ${AWS_ACCOUNT_ID}"
 echo "║  EC2 Type: ${EC2_INSTANCE_TYPE} (oversized for FinOps)"
-echo "║  Fargate:  ${FARGATE_CPU:-1024}CPU / ${FARGATE_MEMORY:-2048}MB (oversized)"
+echo "║  Fargate:  ${FARGATE_CPU:-512}CPU / ${FARGATE_MEMORY:-1024}MB (oversized)"
+echo "║  RDS:      ${RDS_INSTANCE_CLASS:-db.t3.medium} (oversized for FinOps)"
+echo "║  Redis:    ${ELASTICACHE_NODE_TYPE:-cache.t3.small} (oversized for FinOps)"
 echo "╚══════════════════════════════════════════════════════╝"
 echo ""
 
@@ -70,9 +72,12 @@ $AWS_CMD cloudformation deploy \
     DatadogSite="${DD_SITE}" \
     EC2KeyPairName="${EC2_KEY_PAIR_NAME}" \
     EC2InstanceType="${EC2_INSTANCE_TYPE}" \
-    FargateCpu="${FARGATE_CPU:-1024}" \
-    FargateMemory="${FARGATE_MEMORY:-2048}" \
+    FargateCpu="${FARGATE_CPU:-512}" \
+    FargateMemory="${FARGATE_MEMORY:-1024}" \
     JwtSecret="${JWT_SECRET}" \
+    RDSInstanceClass="${RDS_INSTANCE_CLASS:-db.t3.medium}" \
+    RDSPassword="${RDS_PASSWORD}" \
+    ElastiCacheNodeType="${ELASTICACHE_NODE_TYPE:-cache.t3.small}" \
   --capabilities CAPABILITY_NAMED_IAM \
   --tags \
     env="${ENVIRONMENT:-production}" \

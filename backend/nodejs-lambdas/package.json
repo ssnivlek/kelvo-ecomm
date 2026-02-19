@@ -17,6 +17,8 @@
     "stripe": "^14.14.0",
     "jsonwebtoken": "^9.0.2",
     "bcryptjs": "^2.4.3",
+    "pg": "^8.13.0",
+    "ioredis": "^5.4.0",
     "aws-sdk": "^2.1551.0"
   },
   "engines": {

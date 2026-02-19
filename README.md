@@ -28,15 +28,22 @@ E-commerce app with polyglot microservices on AWS. Instrumented with **Datadog R
      │  Spring Boot │ │ dd-trace    │ │ Remote Instr. │
      │  dd-java-    │ │ UDS sockets │ │ (Datadog UI)  │
      │  agent       │ │ Firelens    │ │               │
-     └──────────────┘ └─────────────┘ └───────────────┘
-            │                │               │
-            └────────────────┼───────────────┘
-                             ▼
-                    ┌──────────────────┐
-                    │  Datadog Agent   │
-                    │  APM · Logs      │
-                    │  Metrics · FinOps│
-                    └──────────────────┘
+     └──────┬───────┘ └──────┬──────┘ └───────────────┘
+            │                │
+     ┌──────┴───────┐ ┌─────┴──────┐
+     │  PostgreSQL  │ │   Redis    │
+     │  RDS         │ │ ElastiCache│
+     │  (orders,    │ │ (carts,    │
+     │   users)     │ │  payments) │
+     └──────────────┘ └────────────┘
+            │                │
+            └────────┬───────┘
+                     ▼
+            ┌──────────────────┐
+            │  Datadog Agent   │
+            │  APM · Logs · DBM│
+            │  Metrics · FinOps│
+            └──────────────────┘
 ```
 
 ## Services
@@ -52,6 +59,15 @@ E-commerce app with polyglot microservices on AWS. Instrumented with **Datadog R
 | Notifications | Python 3.11 | Lambda | 3006 | `rum-shop-notifications` |
 | Frontend | React/TS | S3 + CloudFront | 3000 | `kelvo-ecomm` |
 
+## Databases
+
+| Database | AWS Service | Local | Used By |
+|----------|-------------|-------|---------|
+| PostgreSQL 16 | RDS (db.t3.medium) | Docker `postgres:16-alpine` :5432 | Order Service (products, orders), Auth Service (users) |
+| Redis 7 | ElastiCache (cache.t3.small) | Docker `redis:7-alpine` :6379 | Cart Service (sessions), Payment Service (intents) |
+
+Python Lambda services use a static product catalog (no DB connection needed — avoids VPC cold start penalty).
+
 ## FinOps Right-Sizing
 
 Resources are oversized so Datadog Cloud Cost Management recommends downsizing.
@@ -60,7 +76,9 @@ Resources are oversized so Datadog Cloud Cost Management recommends downsizing.
 |----------|----------|-------|---------|
 | EC2 | t3.large (2 vCPU, 8 GB) ~$60/mo | t3.small ~$15/mo | ~$45/mo |
 | ECS x3 | 512 CPU / 1024 MB ~$54/mo | 256/512 ~$27/mo | ~$27/mo |
-| **Total** | **~$114/mo** | **~$42/mo** | **~$72/mo** |
+| RDS | db.t3.medium (2 vCPU, 4 GB) ~$50/mo | db.t3.micro ~$12/mo | ~$38/mo |
+| ElastiCache | cache.t3.small (1.5 GB) ~$25/mo | cache.t3.micro ~$12/mo | ~$13/mo |
+| **Total** | **~$189/mo** | **~$66/mo** | **~$123/mo** |
 
 ## Datadog Instrumentation
 
@@ -148,7 +166,8 @@ aws configure
 
 # 2. Fill in .env.aws
 # Set: AWS_REGION, AWS_ACCOUNT_ID, DD_API_KEY, DD_APP_KEY,
-#      DD_RUM_APPLICATION_ID, DD_RUM_CLIENT_TOKEN, EC2_KEY_PAIR_NAME, JWT_SECRET
+#      DD_RUM_APPLICATION_ID, DD_RUM_CLIENT_TOKEN, EC2_KEY_PAIR_NAME,
+#      JWT_SECRET, RDS_PASSWORD
 
 # 3. Deploy
 ./scripts/deploy-aws.sh
@@ -180,6 +199,10 @@ aws configure
 **No API keys, application keys, or tokens are hardcoded anywhere.** All sensitive values are loaded from environment variables at build/runtime.
 
 ## API Reference
+
+Full OpenAPI 3.0 spec: `docs/openapi.yaml` — Swagger UI at `http://localhost:8888` when running Docker Compose.
+
+Curl examples: `./docs/api-examples.sh`
 
 ### Orders (EC2 Java) — `/api/products`, `/api/orders`
 

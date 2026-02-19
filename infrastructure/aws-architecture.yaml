@@ -61,6 +61,28 @@ Parameters:
     NoEcho: true
     Default: rum-shop-secret-key-2024
 
+  RDSInstanceClass:
+    Type: String
+    Default: db.t3.medium
+    Description: >
+      Oversized for FinOps. App needs db.t3.micro.
+      db.t3.medium (~$50/mo) for Datadog to recommend downsizing.
+    AllowedValues: [db.t3.micro, db.t3.small, db.t3.medium]
+
+  RDSPassword:
+    Type: String
+    NoEcho: true
+    MinLength: 8
+    Description: PostgreSQL master password (min 8 chars)
+
+  ElastiCacheNodeType:
+    Type: String
+    Default: cache.t3.small
+    Description: >
+      Oversized for FinOps. App needs cache.t3.micro.
+      cache.t3.small (~$25/mo) for Datadog to recommend downsizing.
+    AllowedValues: [cache.t3.micro, cache.t3.small, cache.t3.medium]
+
   LatestAmiId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
@@ -207,6 +229,23 @@ Resources:
       SecurityGroupIngress:
         - { IpProtocol: tcp, FromPort: 3001, ToPort: 3003, SourceSecurityGroupId: !Ref ALBSecurityGroup }
 
+  DatabaseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: RDS PostgreSQL — access from EC2 and ECS
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 5432, ToPort: 5432, SourceSecurityGroupId: !Ref EC2SecurityGroup }
+        - { IpProtocol: tcp, FromPort: 5432, ToPort: 5432, SourceSecurityGroupId: !Ref ECSSecurityGroup }
+
+  RedisSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ElastiCache Redis — access from ECS
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 6379, ToPort: 6379, SourceSecurityGroupId: !Ref ECSSecurityGroup }
+
   # ────────────────────────────────────────────────────────────
   # IAM Roles
   # ────────────────────────────────────────────────────────────
@@ -317,6 +356,9 @@ Resources:
           After=network.target
           [Service]
           Type=simple
+          Environment=SPRING_DATASOURCE_URL=jdbc:postgresql://${RDSInstance.Endpoint.Address}:5432/rumshop
+          Environment=SPRING_DATASOURCE_USERNAME=rumshop
+          Environment=SPRING_DATASOURCE_PASSWORD=${RDSPassword}
           ExecStart=/usr/bin/java \
             -javaagent:/opt/dd-java-agent.jar \
             -Ddd.service=rum-shop-order-service \
@@ -439,6 +481,66 @@ Resources:
       Actions: [{ Type: forward, TargetGroupArn: !Ref PaymentTG }]
 
   # ────────────────────────────────────────────────────────────
+  # RDS PostgreSQL (OVERSIZED for FinOps)
+  # Actual need: db.t3.micro (~$12/mo). Deployed: db.t3.medium (~$50/mo).
+  # ────────────────────────────────────────────────────────────
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Private subnets for RDS
+      SubnetIds: [!Ref PrivateSubnet1, !Ref PrivateSubnet2]
+
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Delete
+    Properties:
+      DBInstanceIdentifier: !Sub '${AWS::StackName}-postgres'
+      Engine: postgres
+      EngineVersion: '16.4'
+      DBInstanceClass: !Ref RDSInstanceClass
+      AllocatedStorage: 20
+      StorageType: gp3
+      DBName: rumshop
+      MasterUsername: rumshop
+      MasterUserPassword: !Ref RDSPassword
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups: [!Ref DatabaseSecurityGroup]
+      PubliclyAccessible: false
+      BackupRetentionPeriod: 1
+      MultiAZ: false
+      Tags:
+        - { Key: env, Value: !Ref Environment }
+        - { Key: service, Value: rum-shop-database }
+        - { Key: finops-note, Value: intentionally-oversized-for-rightsizing-demo }
+        - { Key: ideal-instance-class, Value: db.t3.micro }
+
+  # ────────────────────────────────────────────────────────────
+  # ElastiCache Redis (OVERSIZED for FinOps)
+  # Actual need: cache.t3.micro (~$12/mo). Deployed: cache.t3.small (~$25/mo).
+  # ────────────────────────────────────────────────────────────
+  RedisSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      Description: Private subnets for ElastiCache
+      SubnetIds: [!Ref PrivateSubnet1, !Ref PrivateSubnet2]
+
+  RedisCluster:
+    Type: AWS::ElastiCache::CacheCluster
+    Properties:
+      ClusterName: !Sub '${AWS::StackName}-redis'
+      Engine: redis
+      EngineVersion: '7.1'
+      CacheNodeType: !Ref ElastiCacheNodeType
+      NumCacheNodes: 1
+      CacheSubnetGroupName: !Ref RedisSubnetGroup
+      VpcSecurityGroupIds: [!Ref RedisSecurityGroup]
+      Tags:
+        - { Key: env, Value: !Ref Environment }
+        - { Key: service, Value: rum-shop-cache }
+        - { Key: finops-note, Value: intentionally-oversized-for-rightsizing-demo }
+        - { Key: ideal-node-type, Value: cache.t3.micro }
+
+  # ────────────────────────────────────────────────────────────
   # ECR Repositories
   # ────────────────────────────────────────────────────────────
   CartECR:
@@ -529,6 +631,8 @@ Resources:
             - { Name: DD_VERSION, Value: '1.0.0' }
             - { Name: DD_TRACE_AGENT_URL, Value: 'unix:///var/run/datadog/apm.socket' }
             - { Name: PORT, Value: '3001' }
+            - Name: REDIS_URL
+              Value: !Sub 'redis://${RedisCluster.RedisEndpoint.Address}:${RedisCluster.RedisEndpoint.Port}'
           MountPoints:
             - { ContainerPath: /var/run/datadog, SourceVolume: dd-sockets }
           LogConfiguration:
@@ -606,6 +710,8 @@ Resources:
             - { Name: DD_TRACE_AGENT_URL, Value: 'unix:///var/run/datadog/apm.socket' }
             - { Name: JWT_SECRET, Value: !Ref JwtSecret }
             - { Name: PORT, Value: '3002' }
+            - Name: DATABASE_URL
+              Value: !Sub 'postgresql://rumshop:${RDSPassword}@${RDSInstance.Endpoint.Address}:5432/rumshop'
           MountPoints:
             - { ContainerPath: /var/run/datadog, SourceVolume: dd-sockets }
           LogConfiguration:
@@ -680,6 +786,8 @@ Resources:
             - { Name: DD_VERSION, Value: '1.0.0' }
             - { Name: DD_TRACE_AGENT_URL, Value: 'unix:///var/run/datadog/apm.socket' }
             - { Name: PORT, Value: '3003' }
+            - Name: REDIS_URL
+              Value: !Sub 'redis://${RedisCluster.RedisEndpoint.Address}:${RedisCluster.RedisEndpoint.Port}'
           MountPoints:
             - { ContainerPath: /var/run/datadog, SourceVolume: dd-sockets }
           LogConfiguration:
@@ -947,11 +1055,17 @@ Outputs:
     Value: !Ref FrontendBucket
   CloudFrontDistributionId:
     Value: !Ref CDN
+  RDSEndpoint:
+    Value: !GetAtt RDSInstance.Endpoint.Address
+  RedisEndpoint:
+    Value: !GetAtt RedisCluster.RedisEndpoint.Address
   FinOpsNotes:
     Value: !Sub >
       EC2: ${EC2InstanceType} (ideal t3.small, ~$45/mo savings) |
       ECS x3: ${FargateCpu}/${FargateMemory} (ideal 256/512, ~$27/mo savings) |
-      Total waste: ~$72/mo
+      RDS: ${RDSInstanceClass} (ideal db.t3.micro, ~$38/mo savings) |
+      ElastiCache: ${ElastiCacheNodeType} (ideal cache.t3.micro, ~$13/mo savings) |
+      Total waste: ~$123/mo
   LambdaRemoteInstrumentation:
     Value: !Sub >
       Lambda functions deployed WITHOUT Datadog layers.
