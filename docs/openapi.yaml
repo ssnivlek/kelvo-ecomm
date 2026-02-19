@@ -1,0 +1,1275 @@
+openapi: 3.0.3
+info:
+  title: Kelvo-Ecomm API
+  description: |
+    Full API reference for the Kelvo-Ecomm polyglot microservices e-commerce platform.
+
+    ## Architecture
+
+    | Service | Runtime | Deploy Target | Port |
+    |---------|---------|---------------|------|
+    | Order Service | Java (Spring Boot) | EC2 | 8080 |
+    | Cart Service | Node.js (Express) | ECS Fargate | 3001 |
+    | Auth Service | Node.js (Express) | ECS Fargate | 3002 |
+    | Payment Service | Node.js (Express) | ECS Fargate | 3003 |
+    | Search Service | Python (Flask) | Lambda | 3004 |
+    | Recommendations Service | Python (Flask) | Lambda | 3005 |
+    | Notifications Service | Python (Flask) | Lambda | 3006 |
+
+    ## Authentication
+    Only `GET /api/auth/profile` requires a JWT Bearer token.
+    Obtain one via `POST /api/auth/login` or `POST /api/auth/register`.
+  version: 1.0.0
+  contact:
+    name: Kelvin Soares da Silva
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:{port}
+    description: Local (Docker Compose)
+    variables:
+      port:
+        default: "8080"
+        enum: ["8080", "3001", "3002", "3003", "3004", "3005", "3006"]
+  - url: https://{albDns}
+    description: AWS ALB (EC2 + ECS)
+    variables:
+      albDns:
+        default: your-alb-dns.us-east-1.elb.amazonaws.com
+  - url: https://{apiGatewayId}.execute-api.{region}.amazonaws.com
+    description: AWS API Gateway (Lambda)
+    variables:
+      apiGatewayId:
+        default: abc123
+      region:
+        default: us-east-1
+
+tags:
+  - name: Products
+    description: Product catalog (Java Order Service)
+  - name: Orders
+    description: Order management (Java Order Service)
+  - name: Cart
+    description: Shopping cart (Node.js Cart Service)
+  - name: Auth
+    description: Authentication & users (Node.js Auth Service)
+  - name: Payment
+    description: Payment processing (Node.js Payment Service)
+  - name: Search
+    description: Product search & filtering (Python Search Service)
+  - name: Recommendations
+    description: Product recommendations (Python Recommendations Service)
+  - name: Notifications
+    description: Email notifications (Python Notifications Service)
+  - name: Health
+    description: Health checks across all services
+
+# ─────────────────────────────────────────────────────────────
+# PATHS
+# ─────────────────────────────────────────────────────────────
+paths:
+
+  # ━━━ PRODUCTS (Java :8080) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  /api/products:
+    get:
+      operationId: listProducts
+      tags: [Products]
+      summary: List all products
+      responses:
+        "200":
+          description: Product list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+              example:
+                - id: 1
+                  name: "Wireless Headphones"
+                  description: "Premium noise-cancelling headphones"
+                  price: 149.99
+                  imageUrl: "/images/headphones.svg"
+                  category: "Electronics"
+                  stockQuantity: 50
+                  sku: "WH-001"
+                  slug: "wireless-headphones"
+                - id: 2
+                  name: "Leather Backpack"
+                  description: "Handcrafted leather travel backpack"
+                  price: 89.99
+                  imageUrl: "/images/backpack.svg"
+                  category: "Accessories"
+                  stockQuantity: 30
+                  sku: "LB-002"
+                  slug: "leather-backpack"
+    post:
+      operationId: createProduct
+      tags: [Products]
+      summary: Create a product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductRequest"
+            example:
+              name: "Mechanical Keyboard"
+              description: "RGB Cherry MX Blue switches"
+              price: 129.99
+              imageUrl: "/images/keyboard.svg"
+              category: "Electronics"
+              stockQuantity: 100
+              sku: "MK-003"
+              slug: "mechanical-keyboard"
+      responses:
+        "201":
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/products/{id}:
+    get:
+      operationId: getProduct
+      tags: [Products]
+      summary: Get product by ID
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
+      responses:
+        "200":
+          description: Product found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+              example:
+                id: 1
+                name: "Wireless Headphones"
+                description: "Premium noise-cancelling headphones"
+                price: 149.99
+                imageUrl: "/images/headphones.svg"
+                category: "Electronics"
+                stockQuantity: 50
+                sku: "WH-001"
+                slug: "wireless-headphones"
+        "404":
+          description: Product not found
+
+  /api/products/search:
+    get:
+      operationId: searchProductsByName
+      tags: [Products]
+      summary: Search products by name (Java service)
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          example: headphones
+      responses:
+        "200":
+          description: Matching products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+
+  /api/products/{id}/stock:
+    put:
+      operationId: updateStock
+      tags: [Products]
+      summary: Update product stock
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [stockQuantity]
+              properties:
+                stockQuantity:
+                  type: integer
+                  minimum: 0
+            example:
+              stockQuantity: 75
+      responses:
+        "200":
+          description: Stock updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Product not found
+
+  # ━━━ ORDERS (Java :8080) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  /api/orders:
+    post:
+      operationId: createOrder
+      tags: [Orders]
+      summary: Create an order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderRequest"
+            example:
+              customerEmail: "kelvin@example.com"
+              customerName: "Kelvin Soares"
+              shippingAddress: "123 AWS Street, Cloud City"
+              items:
+                - productId: 1
+                  quantity: 2
+                - productId: 3
+                  quantity: 1
+      responses:
+        "201":
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+              example:
+                id: 1
+                customerEmail: "kelvin@example.com"
+                customerName: "Kelvin Soares"
+                status: "PENDING"
+                totalAmount: 429.97
+                shippingAddress: "123 AWS Street, Cloud City"
+                items:
+                  - id: 1
+                    productId: 1
+                    productName: "Wireless Headphones"
+                    quantity: 2
+                    unitPrice: 149.99
+                    subtotal: 299.98
+                  - id: 2
+                    productId: 3
+                    productName: "Mechanical Keyboard"
+                    quantity: 1
+                    unitPrice: 129.99
+                    subtotal: 129.99
+                createdAt: "2026-02-19T14:30:00Z"
+                updatedAt: "2026-02-19T14:30:00Z"
+        "400":
+          description: Validation error
+
+  /api/orders/{id}:
+    get:
+      operationId: getOrder
+      tags: [Orders]
+      summary: Get order by ID
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200":
+          description: Order found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          description: Order not found
+
+  /api/orders/customer/{email}:
+    get:
+      operationId: getOrdersByCustomer
+      tags: [Orders]
+      summary: Get orders by customer email
+      parameters:
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+            format: email
+          example: kelvin@example.com
+      responses:
+        "200":
+          description: Customer orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+
+  /api/orders/{id}/status:
+    put:
+      operationId: updateOrderStatus
+      tags: [Orders]
+      summary: Update order status
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  $ref: "#/components/schemas/OrderStatus"
+            example:
+              status: CONFIRMED
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          description: Order not found
+
+  # ━━━ CART (Node.js :3001) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  /api/cart/add:
+    post:
+      operationId: addToCart
+      tags: [Cart]
+      summary: Add item to cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddToCartRequest"
+            example:
+              sessionId: "sess_abc123"
+              productId: 1
+              productName: "Wireless Headphones"
+              price: 149.99
+              quantity: 2
+              imageUrl: "/images/headphones.svg"
+      responses:
+        "200":
+          description: Item added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartResponse"
+              example:
+                cart:
+                  items:
+                    - productId: 1
+                      productName: "Wireless Headphones"
+                      price: 149.99
+                      quantity: 2
+                      imageUrl: "/images/headphones.svg"
+                  subtotal: 299.98
+                  tax: 27.00
+                  shipping: 5.99
+                  total: 332.97
+                message: "Item added to cart"
+        "400":
+          description: Missing required fields
+
+  /api/cart/{sessionId}:
+    get:
+      operationId: getCart
+      tags: [Cart]
+      summary: Get cart contents
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Cart contents
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+              example:
+                items:
+                  - productId: 1
+                    productName: "Wireless Headphones"
+                    price: 149.99
+                    quantity: 2
+                    imageUrl: "/images/headphones.svg"
+                subtotal: 299.98
+                tax: 27.00
+                shipping: 5.99
+                total: 332.97
+                updatedAt: "2026-02-19T14:30:00Z"
+    delete:
+      operationId: clearCart
+      tags: [Cart]
+      summary: Clear entire cart
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Cart cleared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartResponse"
+              example:
+                cart:
+                  items: []
+                  subtotal: 0
+                  tax: 0
+                  shipping: 0
+                  total: 0
+                message: "Cart cleared"
+
+  /api/cart/update:
+    put:
+      operationId: updateCartItem
+      tags: [Cart]
+      summary: Update item quantity in cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCartRequest"
+            example:
+              sessionId: "sess_abc123"
+              productId: 1
+              quantity: 5
+      responses:
+        "200":
+          description: Cart updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartResponse"
+        "404":
+          description: Item not in cart
+
+  /api/cart/{sessionId}/item/{productId}:
+    delete:
+      operationId: removeCartItem
+      tags: [Cart]
+      summary: Remove single item from cart
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Item removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartResponse"
+
+  # ━━━ AUTH (Node.js :3002) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  /api/auth/register:
+    post:
+      operationId: register
+      tags: [Auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+            example:
+              email: "kelvin@example.com"
+              name: "Kelvin Soares"
+              password: "Str0ngP@ss!"
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+              example:
+                message: "User registered successfully"
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                user:
+                  email: "kelvin@example.com"
+                  name: "Kelvin Soares"
+                  createdAt: "2026-02-19T14:30:00Z"
+        "400":
+          description: Validation error or email already exists
+
+  /api/auth/login:
+    post:
+      operationId: login
+      tags: [Auth]
+      summary: Login with credentials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            example:
+              email: "kelvin@example.com"
+              password: "Str0ngP@ss!"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+              example:
+                message: "Login successful"
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                user:
+                  email: "kelvin@example.com"
+                  name: "Kelvin Soares"
+        "401":
+          description: Invalid credentials
+
+  /api/auth/profile:
+    get:
+      operationId: getProfile
+      tags: [Auth]
+      summary: Get authenticated user profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+              example:
+                user:
+                  email: "kelvin@example.com"
+                  name: "Kelvin Soares"
+                  createdAt: "2026-02-19T14:30:00Z"
+        "401":
+          description: Missing or invalid token
+        "403":
+          description: Token expired
+
+  # ━━━ PAYMENT (Node.js :3003) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  /api/payment/create-intent:
+    post:
+      operationId: createPaymentIntent
+      tags: [Payment]
+      summary: Create a payment intent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePaymentIntentRequest"
+            example:
+              amount: 332.97
+              currency: "usd"
+              customerEmail: "kelvin@example.com"
+              orderId: "order_001"
+      responses:
+        "201":
+          description: Payment intent created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentIntent"
+              example:
+                clientSecret: "pi_abc123_secret_xyz"
+                paymentIntentId: "pi_abc123"
+                status: "requires_confirmation"
+        "400":
+          description: Invalid amount
+
+  /api/payment/confirm:
+    post:
+      operationId: confirmPayment
+      tags: [Payment]
+      summary: Confirm a payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [paymentIntentId]
+              properties:
+                paymentIntentId:
+                  type: string
+            example:
+              paymentIntentId: "pi_abc123"
+      responses:
+        "200":
+          description: Payment confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentConfirmation"
+              example:
+                status: "succeeded"
+                receiptUrl: "https://pay.rumshop.local/receipts/pi_abc123"
+                paymentIntentId: "pi_abc123"
+                amount: 332.97
+                currency: "usd"
+        "404":
+          description: Payment intent not found
+        "400":
+          description: Payment already processed
+
+  /api/payment/webhook:
+    post:
+      operationId: paymentWebhook
+      tags: [Payment]
+      summary: Payment provider webhook
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                id:
+                  type: string
+            example:
+              type: "payment_intent.succeeded"
+              id: "evt_abc123"
+      responses:
+        "200":
+          description: Webhook received
+          content:
+            application/json:
+              example:
+                received: true
+                eventId: "evt_abc123"
+                eventType: "payment_intent.succeeded"
+
+  # ━━━ SEARCH (Python :3004) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  /api/search:
+    get:
+      operationId: searchProducts
+      tags: [Search]
+      summary: Search and filter products
+      parameters:
+        - name: q
+          in: query
+          description: Search text (matches name and description)
+          schema:
+            type: string
+          example: headphones
+        - name: category
+          in: query
+          description: Filter by category
+          schema:
+            type: string
+          example: Electronics
+        - name: minPrice
+          in: query
+          description: Minimum price filter
+          schema:
+            type: number
+            format: float
+          example: 50.00
+        - name: maxPrice
+          in: query
+          description: Maximum price filter
+          schema:
+            type: number
+            format: float
+          example: 200.00
+        - name: sort
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            enum: [price_asc, price_desc, name]
+            default: name
+          example: price_asc
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+              example:
+                products:
+                  - id: 1
+                    name: "Wireless Headphones"
+                    description: "Premium noise-cancelling headphones"
+                    price: 149.99
+                    imageUrl: "/images/headphones.svg"
+                    category: "Electronics"
+                count: 1
+
+  # ━━━ RECOMMENDATIONS (Python :3005) ━━━━━━━━━━━━━━━━━━━━━━━
+
+  /api/recommendations:
+    get:
+      operationId: getRecommendations
+      tags: [Recommendations]
+      summary: Get product recommendations
+      parameters:
+        - name: productId
+          in: query
+          description: Base product for "similar items" (omit for general recs)
+          schema:
+            type: integer
+          example: 1
+        - name: limit
+          in: query
+          description: Max items to return (1-20)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 4
+          example: 4
+      responses:
+        "200":
+          description: Recommended products
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecommendationsResponse"
+              example:
+                recommendations:
+                  - id: 3
+                    name: "Mechanical Keyboard"
+                    description: "RGB Cherry MX Blue switches"
+                    price: 129.99
+                    imageUrl: "/images/keyboard.svg"
+                    category: "Electronics"
+                  - id: 5
+                    name: "USB-C Hub"
+                    description: "7-in-1 multiport adapter"
+                    price: 49.99
+                    imageUrl: "/images/usb-hub.svg"
+                    category: "Electronics"
+
+  # ━━━ NOTIFICATIONS (Python :3006) ━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  /api/notifications/order-confirmation:
+    post:
+      operationId: sendOrderConfirmation
+      tags: [Notifications]
+      summary: Send order confirmation email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderConfirmationRequest"
+            example:
+              orderId: "order_001"
+              customerEmail: "kelvin@example.com"
+              customerName: "Kelvin Soares"
+              items:
+                - productName: "Wireless Headphones"
+                  quantity: 2
+                  price: 149.99
+                - productName: "Mechanical Keyboard"
+                  quantity: 1
+                  price: 129.99
+              totalAmount: 429.97
+      responses:
+        "200":
+          description: Notification sent
+          content:
+            application/json:
+              example:
+                success: true
+                message: "Order confirmation sent to kelvin@example.com"
+                orderId: "order_001"
+        "400":
+          description: Missing required fields
+
+  /api/notifications/shipping-update:
+    post:
+      operationId: sendShippingUpdate
+      tags: [Notifications]
+      summary: Send shipping update email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShippingUpdateRequest"
+            example:
+              orderId: "order_001"
+              customerEmail: "kelvin@example.com"
+              trackingNumber: "1Z999AA10123456784"
+              status: "shipped"
+      responses:
+        "200":
+          description: Notification sent
+          content:
+            application/json:
+              example:
+                success: true
+                message: "Shipping update sent to kelvin@example.com"
+                orderId: "order_001"
+        "400":
+          description: Missing required fields
+
+  # ━━━ HEALTH (all services) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  /actuator/health:
+    get:
+      operationId: healthJava
+      tags: [Health]
+      summary: Java Order Service health
+      description: "Spring Boot Actuator (port 8080)"
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              example:
+                status: "UP"
+
+  /health:
+    get:
+      operationId: healthGeneric
+      tags: [Health]
+      summary: Service health check
+      description: "Available on all Node.js and Python services"
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              example:
+                status: "healthy"
+                service: "rum-shop-cart"
+
+# ─────────────────────────────────────────────────────────────
+# COMPONENTS
+# ─────────────────────────────────────────────────────────────
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token from /api/auth/login or /api/auth/register
+
+  parameters:
+    ProductId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+      example: 1
+    OrderId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+      example: 1
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: sess_abc123
+
+  schemas:
+
+    # ── Products ──────────────────────────────────────────────
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: float
+        imageUrl:
+          type: string
+        category:
+          type: string
+        stockQuantity:
+          type: integer
+        sku:
+          type: string
+        slug:
+          type: string
+
+    CreateProductRequest:
+      type: object
+      required: [name, price, stockQuantity]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: float
+          minimum: 0.01
+        imageUrl:
+          type: string
+        category:
+          type: string
+        stockQuantity:
+          type: integer
+          minimum: 0
+        sku:
+          type: string
+        slug:
+          type: string
+
+    # ── Orders ────────────────────────────────────────────────
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+        customerEmail:
+          type: string
+          format: email
+        customerName:
+          type: string
+        status:
+          $ref: "#/components/schemas/OrderStatus"
+        totalAmount:
+          type: number
+          format: float
+        shippingAddress:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        productId:
+          type: integer
+        productName:
+          type: string
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+          format: float
+        subtotal:
+          type: number
+          format: float
+
+    OrderStatus:
+      type: string
+      enum: [PENDING, CONFIRMED, SHIPPED, DELIVERED, CANCELLED]
+
+    CreateOrderRequest:
+      type: object
+      required: [customerEmail, customerName, items]
+      properties:
+        customerEmail:
+          type: string
+          format: email
+        customerName:
+          type: string
+        shippingAddress:
+          type: string
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [productId, quantity]
+            properties:
+              productId:
+                type: integer
+              quantity:
+                type: integer
+                minimum: 1
+
+    # ── Cart ──────────────────────────────────────────────────
+
+    CartItem:
+      type: object
+      properties:
+        productId:
+          type: integer
+        productName:
+          type: string
+        price:
+          type: number
+          format: float
+        quantity:
+          type: integer
+        imageUrl:
+          type: string
+
+    Cart:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CartItem"
+        subtotal:
+          type: number
+          format: float
+        tax:
+          type: number
+          format: float
+        shipping:
+          type: number
+          format: float
+        total:
+          type: number
+          format: float
+        updatedAt:
+          type: string
+          format: date-time
+
+    CartResponse:
+      type: object
+      properties:
+        cart:
+          $ref: "#/components/schemas/Cart"
+        message:
+          type: string
+
+    AddToCartRequest:
+      type: object
+      required: [sessionId, productId, productName, price]
+      properties:
+        sessionId:
+          type: string
+        productId:
+          type: integer
+        productName:
+          type: string
+        price:
+          type: number
+          format: float
+        quantity:
+          type: integer
+          default: 1
+        imageUrl:
+          type: string
+
+    UpdateCartRequest:
+      type: object
+      required: [sessionId, productId, quantity]
+      properties:
+        sessionId:
+          type: string
+        productId:
+          type: integer
+        quantity:
+          type: integer
+          minimum: 1
+
+    # ── Auth ──────────────────────────────────────────────────
+
+    RegisterRequest:
+      type: object
+      required: [email, name, password]
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        password:
+          type: string
+          format: password
+          minLength: 6
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    AuthResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    User:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    # ── Payment ───────────────────────────────────────────────
+
+    CreatePaymentIntentRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: number
+          format: float
+          minimum: 0.50
+        currency:
+          type: string
+          default: usd
+        customerEmail:
+          type: string
+          format: email
+        orderId:
+          type: string
+
+    PaymentIntent:
+      type: object
+      properties:
+        clientSecret:
+          type: string
+        paymentIntentId:
+          type: string
+        status:
+          type: string
+
+    PaymentConfirmation:
+      type: object
+      properties:
+        status:
+          type: string
+        receiptUrl:
+          type: string
+        paymentIntentId:
+          type: string
+        amount:
+          type: number
+          format: float
+        currency:
+          type: string
+
+    # ── Search ────────────────────────────────────────────────
+
+    SearchResponse:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+        count:
+          type: integer
+
+    # ── Recommendations ───────────────────────────────────────
+
+    RecommendationsResponse:
+      type: object
+      properties:
+        recommendations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+
+    # ── Notifications ─────────────────────────────────────────
+
+    OrderConfirmationRequest:
+      type: object
+      required: [orderId, customerEmail, customerName, items, totalAmount]
+      properties:
+        orderId:
+          type: string
+        customerEmail:
+          type: string
+          format: email
+        customerName:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              productName:
+                type: string
+              quantity:
+                type: integer
+              price:
+                type: number
+                format: float
+        totalAmount:
+          type: number
+          format: float
+
+    ShippingUpdateRequest:
+      type: object
+      required: [orderId, customerEmail, trackingNumber, status]
+      properties:
+        orderId:
+          type: string
+        customerEmail:
+          type: string
+          format: email
+        trackingNumber:
+          type: string
+        status:
+          type: string
+
+    # ── Common ────────────────────────────────────────────────
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        statusCode:
+          type: integer

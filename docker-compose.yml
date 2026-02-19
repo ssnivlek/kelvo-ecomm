@@ -231,6 +231,22 @@ services:
       - rumshop
 
   # ────────────────────────────────────────────────────────────
+  # Swagger UI — OpenAPI docs at http://localhost:8888
+  # ────────────────────────────────────────────────────────────
+  swagger-ui:
+    image: swaggerapi/swagger-ui:latest
+    container_name: rum-shop-swagger
+    environment:
+      - SWAGGER_JSON=/spec/openapi.yaml
+      - BASE_URL=/
+    ports:
+      - "8888:8080"
+    volumes:
+      - ./docs:/spec:ro
+    networks:
+      - rumshop
+
+  # ────────────────────────────────────────────────────────────
   # [S3+CloudFront] React Frontend
   # ────────────────────────────────────────────────────────────
   frontend:
