@@ -1,5 +1,6 @@
-# Build stage (jammy supports both amd64 and arm64)
-FROM eclipse-temurin:17-jdk-jammy AS builder
+# Build stage
+# eclipse-temurin without OS suffix is multi-arch (amd64 + arm64)
+FROM eclipse-temurin:17-jdk AS builder
 
 WORKDIR /app
 
@@ -13,8 +14,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends maven curl && \
       "https://repo1.maven.org/maven2/com/datadoghq/dd-java-agent/1.31.0/dd-java-agent-1.31.0.jar" && \
     rm -rf /var/lib/apt/lists/*
 
-# Runtime stage (jammy supports both amd64 and arm64)
-FROM eclipse-temurin:17-jre-jammy
+# Runtime stage
+FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
