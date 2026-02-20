@@ -59,7 +59,7 @@ const server = http.createServer(async (req, res) => {
 
   if (path === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ status: 'healthy', service: 'rum-shop-cart' }));
+    return res.end(JSON.stringify({ status: 'healthy', service: 'kelvo-ecomm-cart' }));
   }
 
   try {

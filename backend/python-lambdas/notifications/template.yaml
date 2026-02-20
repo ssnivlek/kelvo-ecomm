@@ -23,14 +23,14 @@ Resources:
   NotificationsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: rum-shop-notifications
+      FunctionName: kelvo-ecomm-notifications
       Handler: notifications.handler.handler
       CodeUri: ../
       Layers:
         - !Sub "arn:aws:lambda:${AWS::Region}:464622532012:layer:Datadog-Python311:122"
       Environment:
         Variables:
-          DD_SERVICE: rum-shop-notifications
+          DD_SERVICE: kelvo-ecomm-notifications
           DD_ENV: !Ref Environment
           DD_VERSION: !Ref Version
           DD_TRACE_ENABLED: "true"

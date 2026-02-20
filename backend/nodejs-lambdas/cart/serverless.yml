@@ -1,4 +1,4 @@
-service: rum-shop-cart
+service: kelvo-ecomm-cart
 
 frameworkVersion: '3'
 
@@ -13,7 +13,7 @@ provider:
   runtime: nodejs20.x
   region: ${opt:region, 'us-east-1'}
   environment:
-    DD_SERVICE: rum-shop-cart
+    DD_SERVICE: kelvo-ecomm-cart
     DD_ENV: ${opt:stage, 'production'}
     DD_VERSION: '1.0.0'
     NODE_OPTIONS: '--enable-source-maps'
@@ -46,7 +46,7 @@ functions:
           path: api/cart/{sessionId}
           method: delete
     tags:
-      service: rum-shop-cart
-      project: rum-shop
+      service: kelvo-ecomm-cart
+      project: kelvo-ecomm
 
 # Datadog: Set DD_API_KEY or DD_KMS_API_KEY env var for APM. Layer ARN uses latest version.

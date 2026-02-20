@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
-import { datadogRum } from '@datadog/browser-rum';
 import toast from 'react-hot-toast';
+
+declare global {
+  interface Window { DD_RUM?: any; DD_LOGS?: any; }
+}
 import {
   CartItem,
   CartTotals,
@@ -14,7 +17,7 @@ import {
   clearCart as apiClearCart,
 } from '../services/api';
 
-const SESSION_KEY = 'rum_shop_session_id';
+const SESSION_KEY = 'kelvo_ecomm_session_id';
 const TAX_RATE = 0.085;
 const FREE_SHIPPING_THRESHOLD = 50;
 const SHIPPING_COST = 5.99;
@@ -121,7 +124,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           isDrawerOpen: true,
         }));
         toast.success(`Added ${product.name} to cart`);
-        datadogRum.addAction('cart_add', {
+        window.DD_RUM?.addAction('cart_add', {
           productId: product.id,
           productName: product.name,
           quantity,
@@ -152,7 +155,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           };
         });
         toast.success(`Added ${product.name} to cart`);
-        datadogRum.addAction('cart_add', { productId: product.id, productName: product.name, quantity });
+        window.DD_RUM?.addAction('cart_add', { productId: product.id, productName: product.name, quantity });
       }
     },
     [sessionId]
@@ -175,7 +178,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           isLoading: false,
         }));
         toast.success('Item removed from cart');
-        datadogRum.addAction('cart_remove', { productId });
+        window.DD_RUM?.addAction('cart_remove', { productId });
       } catch {
         setState((s) => {
           const items = s.items.filter((i) => String(i.productId) !== String(productId));
@@ -187,7 +190,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           };
         });
         toast.success('Item removed from cart');
-        datadogRum.addAction('cart_remove', { productId });
+        window.DD_RUM?.addAction('cart_remove', { productId });
       }
     },
     [sessionId]
@@ -213,7 +216,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           },
           isLoading: false,
         }));
-        datadogRum.addAction('cart_update', { productId, quantity });
+        window.DD_RUM?.addAction('cart_update', { productId, quantity });
       } catch {
         setState((s) => {
           const items = s.items.map((i) =>
@@ -226,7 +229,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             isLoading: false,
           };
         });
-        datadogRum.addAction('cart_update', { productId, quantity });
+        window.DD_RUM?.addAction('cart_update', { productId, quantity });
       }
     },
     [sessionId, removeItem]
@@ -243,7 +246,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         isDrawerOpen: false,
       });
       toast.success('Cart cleared');
-      datadogRum.addAction('cart_clear');
+      window.DD_RUM?.addAction('cart_clear');
     } catch {
       setState({
         items: [],
@@ -252,7 +255,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         isDrawerOpen: false,
       });
       toast.success('Cart cleared');
-      datadogRum.addAction('cart_clear');
+      window.DD_RUM?.addAction('cart_clear');
     }
   }, [sessionId]);
 

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { datadogRum } from '@datadog/browser-rum';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -41,7 +40,7 @@ export function CheckoutPage() {
 
     setStep('processing');
     setErrorMsg('');
-    datadogRum.addAction('checkout_start');
+    window.DD_RUM?.addAction('checkout_start');
 
     try {
       const orderData: CreateOrderRequest = {
@@ -56,7 +55,7 @@ export function CheckoutPage() {
 
       const order = await createOrder(orderData, totals.total);
       setOrderId(order.id);
-      datadogRum.addAction('checkout_order_created', { orderId: order.id });
+      window.DD_RUM?.addAction('checkout_order_created', { orderId: order.id });
 
       const { paymentIntentId } = await createPaymentIntent(
         totals.total,
@@ -64,10 +63,10 @@ export function CheckoutPage() {
         form.email,
         String(order.id)
       );
-      datadogRum.addAction('checkout_payment_intent_created');
+      window.DD_RUM?.addAction('checkout_payment_intent_created');
 
       await confirmPayment(paymentIntentId);
-      datadogRum.addAction('checkout_payment_confirmed');
+      window.DD_RUM?.addAction('checkout_payment_confirmed');
 
       await sendOrderConfirmation({
         orderId: order.id,
@@ -83,12 +82,12 @@ export function CheckoutPage() {
 
       await clearCart();
       setStep('success');
-      datadogRum.addAction('checkout_complete', { orderId: order.id });
+      window.DD_RUM?.addAction('checkout_complete', { orderId: order.id });
       navigate(`/order-confirmation/${order.id}`);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Checkout failed');
       setStep('error');
-      datadogRum.addAction('checkout_error', { error: String(err) });
+      window.DD_RUM?.addAction('checkout_error', { error: String(err) });
     }
   };
 

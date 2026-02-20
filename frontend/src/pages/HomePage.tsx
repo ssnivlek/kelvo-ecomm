@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiTruck, FiCreditCard, FiHeadphones, FiRotateCcw } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import { datadogRum } from '@datadog/browser-rum';
 import { ProductCard } from '../components/ProductCard';
 import { fetchProducts, getRecommendations } from '../services/api';
 import { Product } from '../types';
@@ -27,7 +26,7 @@ export function HomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    datadogRum.addAction('page_view', { page: 'home' });
+    window.DD_RUM?.addAction('page_view', { page: 'home' });
   }, []);
 
   useEffect(() => {
@@ -123,7 +122,7 @@ export function HomePage() {
               className="newsletter-form"
               onSubmit={(e) => {
                 e.preventDefault();
-                datadogRum.addAction('newsletter_signup');
+                window.DD_RUM?.addAction('newsletter_signup');
               }}
             >
               <input

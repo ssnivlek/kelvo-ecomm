@@ -56,13 +56,13 @@ E-commerce application with polyglot microservices on AWS. Full observability wi
 
 | Service | Language | AWS | Local Port | DD Service Name |
 |---------|----------|-----|------------|-----------------|
-| Orders | Java 17 (Spring Boot) | EC2 `t3.large` | 8080 | `rum-shop-order-service` |
-| Cart | Node.js 20 | ECS Fargate | 3001 | `rum-shop-cart` |
-| Auth | Node.js 20 | ECS Fargate | 3002 | `rum-shop-auth` |
-| Payment | Node.js 20 | ECS Fargate | 3003 | `rum-shop-payment` |
-| Search | Python 3.11 | Lambda | 3004 | `rum-shop-search` |
-| Recommendations | Python 3.11 | Lambda | 3005 | `rum-shop-recommendations` |
-| Notifications | Python 3.11 | Lambda | 3006 | `rum-shop-notifications` |
+| Orders | Java 17 (Spring Boot) | EC2 `t3.large` | 8080 | `kelvo-ecomm-order-service` |
+| Cart | Node.js 20 | ECS Fargate | 3001 | `kelvo-ecomm-cart` |
+| Auth | Node.js 20 | ECS Fargate | 3002 | `kelvo-ecomm-auth` |
+| Payment | Node.js 20 | ECS Fargate | 3003 | `kelvo-ecomm-payment` |
+| Search | Python 3.11 | Lambda | 3004 | `kelvo-ecomm-search` |
+| Recommendations | Python 3.11 | Lambda | 3005 | `kelvo-ecomm-recommendations` |
+| Notifications | Python 3.11 | Lambda | 3006 | `kelvo-ecomm-notifications` |
 | Frontend | React + TypeScript | S3 + CloudFront | 3000 | `kelvo-ecomm` |
 
 ---
@@ -306,7 +306,7 @@ The Datadog Agent is installed on the EC2 instance during boot (CloudFormation U
 
 ```
 java -javaagent:/opt/dd-java-agent.jar \
-  -Ddd.service=rum-shop-order-service \
+  -Ddd.service=kelvo-ecomm-order-service \
   -Ddd.env=production \
   -Ddd.profiling.enabled=true \
   -Ddd.logs.injection=true \
@@ -477,14 +477,14 @@ labels:
     "dbname":"rumshop",
     "dbm":true
   }]'
-  com.datadoghq.ad.logs: '[{"source":"postgresql","service":"rum-shop-postgres"}]'
+  com.datadoghq.ad.logs: '[{"source":"postgresql","service":"kelvo-ecomm-postgres"}]'
 
 # Redis container labels
 labels:
   com.datadoghq.ad.check_names: '["redisdb"]'
   com.datadoghq.ad.init_configs: '[{}]'
   com.datadoghq.ad.instances: '[{"host":"%%host%%","port":6379}]'
-  com.datadoghq.ad.logs: '[{"source":"redis","service":"rum-shop-redis"}]'
+  com.datadoghq.ad.logs: '[{"source":"redis","service":"kelvo-ecomm-redis"}]'
 ```
 
 The Datadog Agent detects these labels automatically and starts collecting DBM data. No manual config files needed.
@@ -507,7 +507,7 @@ instances:
     collect_database_size_metrics: true
     tags:
       - env:production
-      - service:rum-shop-postgres
+      - service:kelvo-ecomm-postgres
 
 # /etc/datadog-agent/conf.d/redisdb.d/conf.yaml
 init_config:
@@ -516,7 +516,7 @@ instances:
     port: 6379
     tags:
       - env:production
-      - service:rum-shop-redis
+      - service:kelvo-ecomm-redis
 ```
 
 The EC2 instance can reach both RDS and ElastiCache because the security groups allow it (see the Network Architecture section above).

@@ -29,21 +29,21 @@ def _get_product_by_id(product_id: int) -> dict[str, Any] | None:
 
 def _get_recommendations_for_product(product_id: int, limit: int) -> list[dict[str, Any]]:
     """Get similar products from the same category, excluding the given product."""
-    with tracer.trace("recommendations.calculate", service="rum-shop-recommendations"):
+    with tracer.trace("recommendations.calculate", service="kelvo-ecomm-recommendations"):
         product = _get_product_by_id(product_id)
         if not product:
             return []
 
         category = product["category"]
-        with tracer.trace("recommendations.filter", service="rum-shop-recommendations"):
+        with tracer.trace("recommendations.filter", service="kelvo-ecomm-recommendations"):
             same_category = [p for p in PRODUCTS if p["category"] == category and p["id"] != product_id]
             return same_category[:limit]
 
 
 def _get_featured_products(limit: int) -> list[dict[str, Any]]:
     """Get top/featured products (first N by ID as featured)."""
-    with tracer.trace("recommendations.calculate", service="rum-shop-recommendations"):
-        with tracer.trace("recommendations.filter", service="rum-shop-recommendations"):
+    with tracer.trace("recommendations.calculate", service="kelvo-ecomm-recommendations"):
+        with tracer.trace("recommendations.filter", service="kelvo-ecomm-recommendations"):
             return PRODUCTS[:limit]
 
 
@@ -72,7 +72,7 @@ def _handle_recommendations(event: dict[str, Any]) -> dict[str, Any]:
 
 def _handle_health(event: dict[str, Any]) -> dict[str, Any]:
     """Handle health check."""
-    return json_response({"status": "healthy", "service": "rum-shop-recommendations"})
+    return json_response({"status": "healthy", "service": "kelvo-ecomm-recommendations"})
 
 
 def _handle_options() -> dict[str, Any]:

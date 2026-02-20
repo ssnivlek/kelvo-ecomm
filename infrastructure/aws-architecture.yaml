@@ -59,7 +59,7 @@ Parameters:
   JwtSecret:
     Type: String
     NoEcho: true
-    Default: rum-shop-secret-key-2024
+    Default: kelvo-ecomm-secret-key-2024
 
   RDSInstanceClass:
     Type: String
@@ -331,7 +331,7 @@ Resources:
 
           # Install Datadog Agent
           DD_API_KEY=${DatadogApiKey} DD_SITE=${DatadogSite} \
-          DD_HOST_TAGS="env:${Environment},service:rum-shop-order-service,team:rumshop" \
+          DD_HOST_TAGS="env:${Environment},service:kelvo-ecomm-order-service,team:rumshop" \
             bash -c "$(curl -L https://install.datadoghq.com/scripts/install_script_agent7.sh)"
 
           cat >> /etc/datadog-agent/datadog.yaml <<DDCFG
@@ -358,7 +358,7 @@ Resources:
               reported_hostname: ${AWS::StackName}-postgres
               tags:
                 - env:${Environment}
-                - service:rum-shop-postgres
+                - service:kelvo-ecomm-postgres
                 - team:rumshop
           PGCFG
 
@@ -370,7 +370,7 @@ Resources:
               port: ${RedisCluster.RedisEndpoint.Port}
               tags:
                 - env:${Environment}
-                - service:rum-shop-redis
+                - service:kelvo-ecomm-redis
                 - team:rumshop
           RDCFG
 
@@ -394,7 +394,7 @@ Resources:
           Environment=SPRING_DATASOURCE_PASSWORD=${RDSPassword}
           ExecStart=/usr/bin/java \
             -javaagent:/opt/dd-java-agent.jar \
-            -Ddd.service=rum-shop-order-service \
+            -Ddd.service=kelvo-ecomm-order-service \
             -Ddd.env=${Environment} \
             -Ddd.version=1.0.0 \
             -Ddd.profiling.enabled=true \
@@ -412,7 +412,7 @@ Resources:
       Tags:
         - { Key: Name, Value: !Sub '${AWS::StackName}-order-service' }
         - { Key: env, Value: !Ref Environment }
-        - { Key: service, Value: rum-shop-order-service }
+        - { Key: service, Value: kelvo-ecomm-order-service }
         - { Key: finops-note, Value: intentionally-oversized-for-rightsizing-demo }
         - { Key: ideal-instance-type, Value: t3.small }
 
@@ -543,7 +543,7 @@ Resources:
       MultiAZ: false
       Tags:
         - { Key: env, Value: !Ref Environment }
-        - { Key: service, Value: rum-shop-database }
+        - { Key: service, Value: kelvo-ecomm-database }
         - { Key: finops-note, Value: intentionally-oversized-for-rightsizing-demo }
         - { Key: ideal-instance-class, Value: db.t3.micro }
 
@@ -569,7 +569,7 @@ Resources:
       VpcSecurityGroupIds: [!Ref RedisSecurityGroup]
       Tags:
         - { Key: env, Value: !Ref Environment }
-        - { Key: service, Value: rum-shop-cache }
+        - { Key: service, Value: kelvo-ecomm-cache }
         - { Key: finops-note, Value: intentionally-oversized-for-rightsizing-demo }
         - { Key: ideal-node-type, Value: cache.t3.micro }
 
@@ -659,7 +659,7 @@ Resources:
           PortMappings:
             - { ContainerPort: 3001 }
           Environment:
-            - { Name: DD_SERVICE, Value: rum-shop-cart }
+            - { Name: DD_SERVICE, Value: kelvo-ecomm-cart }
             - { Name: DD_ENV, Value: !Ref Environment }
             - { Name: DD_VERSION, Value: '1.0.0' }
             - { Name: DD_TRACE_AGENT_URL, Value: 'unix:///var/run/datadog/apm.socket' }
@@ -675,10 +675,10 @@ Resources:
               apikey: !Ref DatadogApiKey
               provider: ecs
               Name: datadog
-              dd_service: rum-shop-cart
+              dd_service: kelvo-ecomm-cart
               dd_tags: !Sub 'env:${Environment},version:1.0.0'
       Tags:
-        - { Key: service, Value: rum-shop-cart }
+        - { Key: service, Value: kelvo-ecomm-cart }
         - { Key: finops-note, Value: intentionally-oversized }
         - { Key: ideal-cpu, Value: '256' }
         - { Key: ideal-memory, Value: '512' }
@@ -737,7 +737,7 @@ Resources:
           Essential: true
           PortMappings: [{ ContainerPort: 3002 }]
           Environment:
-            - { Name: DD_SERVICE, Value: rum-shop-auth }
+            - { Name: DD_SERVICE, Value: kelvo-ecomm-auth }
             - { Name: DD_ENV, Value: !Ref Environment }
             - { Name: DD_VERSION, Value: '1.0.0' }
             - { Name: DD_TRACE_AGENT_URL, Value: 'unix:///var/run/datadog/apm.socket' }
@@ -754,10 +754,10 @@ Resources:
               apikey: !Ref DatadogApiKey
               provider: ecs
               Name: datadog
-              dd_service: rum-shop-auth
+              dd_service: kelvo-ecomm-auth
               dd_tags: !Sub 'env:${Environment},version:1.0.0'
       Tags:
-        - { Key: service, Value: rum-shop-auth }
+        - { Key: service, Value: kelvo-ecomm-auth }
         - { Key: finops-note, Value: intentionally-oversized }
 
   AuthSvc:
@@ -814,7 +814,7 @@ Resources:
           Essential: true
           PortMappings: [{ ContainerPort: 3003 }]
           Environment:
-            - { Name: DD_SERVICE, Value: rum-shop-payment }
+            - { Name: DD_SERVICE, Value: kelvo-ecomm-payment }
             - { Name: DD_ENV, Value: !Ref Environment }
             - { Name: DD_VERSION, Value: '1.0.0' }
             - { Name: DD_TRACE_AGENT_URL, Value: 'unix:///var/run/datadog/apm.socket' }
@@ -830,10 +830,10 @@ Resources:
               apikey: !Ref DatadogApiKey
               provider: ecs
               Name: datadog
-              dd_service: rum-shop-payment
+              dd_service: kelvo-ecomm-payment
               dd_tags: !Sub 'env:${Environment},version:1.0.0'
       Tags:
-        - { Key: service, Value: rum-shop-payment }
+        - { Key: service, Value: kelvo-ecomm-payment }
         - { Key: finops-note, Value: intentionally-oversized }
 
   PaymentSvc:
@@ -890,12 +890,12 @@ Resources:
       Timeout: 30
       Environment:
         Variables:
-          DD_SERVICE: rum-shop-search
+          DD_SERVICE: kelvo-ecomm-search
           DD_ENV: !Ref Environment
           DD_VERSION: '1.0.0'
       Tags:
         - { Key: env, Value: !Ref Environment }
-        - { Key: service, Value: rum-shop-search }
+        - { Key: service, Value: kelvo-ecomm-search }
         - { Key: team, Value: rumshop }
 
   SearchInteg:
@@ -932,12 +932,12 @@ Resources:
       Timeout: 30
       Environment:
         Variables:
-          DD_SERVICE: rum-shop-recommendations
+          DD_SERVICE: kelvo-ecomm-recommendations
           DD_ENV: !Ref Environment
           DD_VERSION: '1.0.0'
       Tags:
         - { Key: env, Value: !Ref Environment }
-        - { Key: service, Value: rum-shop-recommendations }
+        - { Key: service, Value: kelvo-ecomm-recommendations }
         - { Key: team, Value: rumshop }
 
   RecsInteg:
@@ -974,12 +974,12 @@ Resources:
       Timeout: 30
       Environment:
         Variables:
-          DD_SERVICE: rum-shop-notifications
+          DD_SERVICE: kelvo-ecomm-notifications
           DD_ENV: !Ref Environment
           DD_VERSION: '1.0.0'
       Tags:
         - { Key: env, Value: !Ref Environment }
-        - { Key: service, Value: rum-shop-notifications }
+        - { Key: service, Value: kelvo-ecomm-notifications }
         - { Key: team, Value: rumshop }
 
   NotifInteg:

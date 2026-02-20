@@ -861,7 +861,7 @@ paths:
             application/json:
               example:
                 status: "healthy"
-                service: "rum-shop-cart"
+                service: "kelvo-ecomm-cart"
 
 # ─────────────────────────────────────────────────────────────
 # COMPONENTS

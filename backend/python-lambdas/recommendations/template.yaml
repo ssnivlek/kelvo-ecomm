@@ -23,14 +23,14 @@ Resources:
   RecommendationsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: rum-shop-recommendations
+      FunctionName: kelvo-ecomm-recommendations
       Handler: recommendations.handler.handler
       CodeUri: ../
       Layers:
         - !Sub "arn:aws:lambda:${AWS::Region}:464622532012:layer:Datadog-Python311:122"
       Environment:
         Variables:
-          DD_SERVICE: rum-shop-recommendations
+          DD_SERVICE: kelvo-ecomm-recommendations
           DD_ENV: !Ref Environment
           DD_VERSION: !Ref Version
           DD_TRACE_ENABLED: "true"

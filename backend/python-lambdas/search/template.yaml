@@ -23,14 +23,14 @@ Resources:
   SearchFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: rum-shop-search
+      FunctionName: kelvo-ecomm-search
       Handler: search.handler.handler
       CodeUri: ../
       Layers:
         - !Sub "arn:aws:lambda:${AWS::Region}:464622532012:layer:Datadog-Python311:122"
       Environment:
         Variables:
-          DD_SERVICE: rum-shop-search
+          DD_SERVICE: kelvo-ecomm-search
           DD_ENV: !Ref Environment
           DD_VERSION: !Ref Version
           DD_TRACE_ENABLED: "true"

@@ -10,6 +10,55 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <title>Kelvo E-Comm - Premium Products</title>
+    <script>
+      (function(h,o,u,n,d) {
+        h=h[d]=h[d]||{q:[],onReady:function(c){h.q.push(c)}};
+        d=o.createElement(u);d.async=1;d.src=n;d.crossOrigin='';
+        n=o.getElementsByTagName(u)[0];n.parentNode.insertBefore(d,n);
+      })(window,document,'script','https://www.datadoghq-browser-agent.com/us1/v6/datadog-rum.js','DD_RUM');
+
+      window.DD_RUM.onReady(function() {
+        window.DD_RUM.init({
+          applicationId: '%REACT_APP_DD_APPLICATION_ID%',
+          clientToken: '%REACT_APP_DD_CLIENT_TOKEN%',
+          site: '%REACT_APP_DD_SITE%',
+          service: '%REACT_APP_DD_SERVICE%',
+          env: '%REACT_APP_DD_ENV%',
+          version: '%REACT_APP_DD_VERSION%',
+          sessionSampleRate: 100,
+          sessionReplaySampleRate: 100,
+          trackResources: true,
+          trackUserInteractions: true,
+          trackLongTasks: true,
+          defaultPrivacyLevel: 'mask-user-input',
+          allowedTracingUrls: [
+            {match: /^http:\/\/localhost/, propagatorTypes: ['datadog','tracecontext']},
+            {match: function(url){return url.indexOf('.amazonaws.com')!==-1}, propagatorTypes: ['datadog','tracecontext']},
+            {match: function(url){return url.indexOf('.cloudfront.net')!==-1}, propagatorTypes: ['datadog','tracecontext']}
+          ]
+        });
+      });
+    </script>
+    <script>
+      (function(h,o,u,n,d) {
+        h=h[d]=h[d]||{q:[],onReady:function(c){h.q.push(c)}};
+        d=o.createElement(u);d.async=1;d.src=n;d.crossOrigin='';
+        n=o.getElementsByTagName(u)[0];n.parentNode.insertBefore(d,n);
+      })(window,document,'script','https://www.datadoghq-browser-agent.com/us1/v6/datadog-logs.js','DD_LOGS');
+
+      window.DD_LOGS.onReady(function() {
+        window.DD_LOGS.init({
+          clientToken: '%REACT_APP_DD_CLIENT_TOKEN%',
+          site: '%REACT_APP_DD_SITE%',
+          service: '%REACT_APP_DD_SERVICE%',
+          env: '%REACT_APP_DD_ENV%',
+          version: '%REACT_APP_DD_VERSION%',
+          forwardErrorsToLogs: true,
+          forwardConsoleLogs: 'all',
+          sessionSampleRate: 100
+        });
+      });
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

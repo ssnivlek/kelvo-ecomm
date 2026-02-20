@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FiShoppingCart, FiStar } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import { datadogRum } from '@datadog/browser-rum';
 import { ProductCard } from '../components/ProductCard';
 import { fetchProduct, getRecommendations } from '../services/api';
 import { useCart } from '../context/CartContext';
@@ -36,7 +35,7 @@ export function ProductDetailPage() {
         setProduct(p || null);
         setRecommendations(recs || []);
         if (p) {
-          datadogRum.addAction('product_view', {
+          window.DD_RUM?.addAction('product_view', {
             productId: p.id,
             productName: p.name,
           });

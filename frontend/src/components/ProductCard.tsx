@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiShoppingCart, FiStar } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import { datadogRum } from '@datadog/browser-rum';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import './ProductCard.css';
@@ -30,7 +29,7 @@ export function ProductCard({ product, showRating = true }: ProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     addItem(product);
-    datadogRum.addAction('product_card_view', {
+    window.DD_RUM?.addAction('product_card_view', {
       productId: product.id,
       productName: product.name,
       action: 'add_to_cart',
@@ -38,7 +37,7 @@ export function ProductCard({ product, showRating = true }: ProductCardProps) {
   };
 
   const handleView = () => {
-    datadogRum.addAction('product_card_view', {
+    window.DD_RUM?.addAction('product_card_view', {
       productId: product.id,
       productName: product.name,
     });

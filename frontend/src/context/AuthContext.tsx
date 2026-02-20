@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { datadogRum } from '@datadog/browser-rum';
 import { User } from '../types';
 import { login as apiLogin, register as apiRegister, getProfile } from '../services/api';
 
-const TOKEN_KEY = 'rum_shop_token';
+const TOKEN_KEY = 'kelvo_ecomm_token';
 
 interface AuthContextValue {
   user: User | null;
@@ -34,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const profile = await getProfile(t);
       setUser(profile);
       setToken(t);
-      datadogRum.setUser({
+      window.DD_RUM?.setUser({
         id: profile.email,
         email: profile.email,
         name: profile.name,
@@ -57,12 +56,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(TOKEN_KEY, t);
     setToken(t);
     setUser(u);
-    datadogRum.setUser({
+    window.DD_RUM?.setUser({
       id: u.email,
       email: u.email,
       name: u.name,
     });
-    datadogRum.addAction('auth_login', { email: u.email });
+    window.DD_RUM?.addAction('auth_login', { email: u.email });
   }, []);
 
   const register = useCallback(async (email: string, name: string, password: string) => {
@@ -70,20 +69,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(TOKEN_KEY, t);
     setToken(t);
     setUser(u);
-    datadogRum.setUser({
+    window.DD_RUM?.setUser({
       id: u.email,
       email: u.email,
       name: u.name,
     });
-    datadogRum.addAction('auth_register', { email: u.email });
+    window.DD_RUM?.addAction('auth_register', { email: u.email });
   }, []);
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     setToken(null);
     setUser(null);
-    datadogRum.clearUser();
-    datadogRum.addAction('auth_logout');
+    window.DD_RUM?.clearUser();
+    window.DD_RUM?.addAction('auth_logout');
   }, []);
 
   const value: AuthContextValue = {

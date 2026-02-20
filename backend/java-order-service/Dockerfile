@@ -24,7 +24,7 @@ COPY --from=builder /app/target/*.jar app.jar
 COPY --from=builder /app/dd-java-agent.jar dd-java-agent.jar
 
 # Datadog APM environment variables (can be overridden at runtime)
-ENV DD_SERVICE=rum-shop-order-service
+ENV DD_SERVICE=kelvo-ecomm-order-service
 ENV DD_ENV=production
 ENV DD_VERSION=1.0.0
 ENV DD_LOGS_INJECTION=true

@@ -21,7 +21,7 @@ logger.setLevel(logging.INFO)
 
 def _send_order_confirmation(body: dict[str, Any]) -> dict[str, Any]:
     """Simulate sending order confirmation email."""
-    with tracer.trace("notification.prepare", service="rum-shop-notifications"):
+    with tracer.trace("notification.prepare", service="kelvo-ecomm-notifications"):
         order_id = body.get("orderId")
         customer_email = body.get("customerEmail")
         customer_name = body.get("customerName")
@@ -35,7 +35,7 @@ def _send_order_confirmation(body: dict[str, Any]) -> dict[str, Any]:
                 error_code="VALIDATION_ERROR",
             )
 
-    with tracer.trace("notification.send", service="rum-shop-notifications"):
+    with tracer.trace("notification.send", service="kelvo-ecomm-notifications"):
         logger.info(
             "Order confirmation email (simulated): orderId=%s to=%s items=%s total=%s",
             order_id,
@@ -54,7 +54,7 @@ def _send_order_confirmation(body: dict[str, Any]) -> dict[str, Any]:
 
 def _send_shipping_update(body: dict[str, Any]) -> dict[str, Any]:
     """Simulate sending shipping notification."""
-    with tracer.trace("notification.prepare", service="rum-shop-notifications"):
+    with tracer.trace("notification.prepare", service="kelvo-ecomm-notifications"):
         order_id = body.get("orderId")
         customer_email = body.get("customerEmail")
         tracking_number = body.get("trackingNumber")
@@ -67,7 +67,7 @@ def _send_shipping_update(body: dict[str, Any]) -> dict[str, Any]:
                 error_code="VALIDATION_ERROR",
             )
 
-    with tracer.trace("notification.send", service="rum-shop-notifications"):
+    with tracer.trace("notification.send", service="kelvo-ecomm-notifications"):
         logger.info(
             "Shipping update email (simulated): orderId=%s to=%s tracking=%s status=%s",
             order_id,
@@ -86,7 +86,7 @@ def _send_shipping_update(body: dict[str, Any]) -> dict[str, Any]:
 
 def _handle_health(event: dict[str, Any]) -> dict[str, Any]:
     """Handle health check."""
-    return json_response({"status": "healthy", "service": "rum-shop-notifications"})
+    return json_response({"status": "healthy", "service": "kelvo-ecomm-notifications"})
 
 
 def _handle_options() -> dict[str, Any]:

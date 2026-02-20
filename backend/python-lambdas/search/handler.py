@@ -27,12 +27,12 @@ def _search_products(
     sort: str,
 ) -> list[dict[str, Any]]:
     """Search products by name/description, filter by category and price, then sort."""
-    with tracer.trace("search.query", service="rum-shop-search"):
+    with tracer.trace("search.query", service="kelvo-ecomm-search"):
         results = list(PRODUCTS)
 
         if query:
             q = query.lower()
-            with tracer.trace("search.filter", service="rum-shop-search"):
+            with tracer.trace("search.filter", service="kelvo-ecomm-search"):
                 results = [
                     p
                     for p in results
@@ -40,18 +40,18 @@ def _search_products(
                 ]
 
         if category:
-            with tracer.trace("search.filter", service="rum-shop-search"):
+            with tracer.trace("search.filter", service="kelvo-ecomm-search"):
                 results = [p for p in results if p["category"].lower() == category.lower()]
 
         if min_price is not None:
-            with tracer.trace("search.filter", service="rum-shop-search"):
+            with tracer.trace("search.filter", service="kelvo-ecomm-search"):
                 results = [p for p in results if p["price"] >= min_price]
 
         if max_price is not None:
-            with tracer.trace("search.filter", service="rum-shop-search"):
+            with tracer.trace("search.filter", service="kelvo-ecomm-search"):
                 results = [p for p in results if p["price"] <= max_price]
 
-        with tracer.trace("search.sort", service="rum-shop-search"):
+        with tracer.trace("search.sort", service="kelvo-ecomm-search"):
             if sort == "price_asc":
                 results.sort(key=lambda p: p["price"])
             elif sort == "price_desc":
@@ -95,7 +95,7 @@ def _handle_search(event: dict[str, Any]) -> dict[str, Any]:
 
 def _handle_health(event: dict[str, Any]) -> dict[str, Any]:
     """Handle health check."""
-    return json_response({"status": "healthy", "service": "rum-shop-search"})
+    return json_response({"status": "healthy", "service": "kelvo-ecomm-search"})
 
 
 def _handle_options() -> dict[str, Any]:

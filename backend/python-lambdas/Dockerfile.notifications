@@ -37,7 +37,7 @@ def notifications(subpath):
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({'status': 'healthy', 'service': 'rum-shop-notifications'})
+    return jsonify({'status': 'healthy', 'service': 'kelvo-ecomm-notifications'})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 3006)))

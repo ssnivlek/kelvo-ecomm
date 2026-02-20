@@ -9,7 +9,7 @@ const bcrypt = require('bcryptjs');
 const { success, error, created, CORS_HEADERS } = require('../shared/responses');
 const { getUserByEmail, createUser } = require('../shared/postgres');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'rum-shop-secret-key-2024';
+const JWT_SECRET = process.env.JWT_SECRET || 'kelvo-ecomm-secret-key-2024';
 const JWT_EXPIRY = '24h';
 
 function hashPassword(password) {

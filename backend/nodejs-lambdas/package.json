@@ -1,5 +1,5 @@
 {
-  "name": "rum-shop-nodejs-lambdas",
+  "name": "kelvo-ecomm-nodejs-lambdas",
   "version": "1.0.0",
   "description": "Kelvo E-Comm AWS Lambda functions with Datadog APM",
   "main": "index.js",

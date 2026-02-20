@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { datadogRum } from '@datadog/browser-rum';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import './LoginPage.css';
@@ -26,7 +25,7 @@ export function LoginPage() {
     try {
       await login(loginForm.email, loginForm.password);
       toast.success('Welcome back!');
-      datadogRum.addAction('auth_login_success');
+      window.DD_RUM?.addAction('auth_login_success');
       navigate('/');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Login failed');
@@ -49,7 +48,7 @@ export function LoginPage() {
     try {
       await register(registerForm.email, registerForm.name, registerForm.password);
       toast.success('Account created!');
-      datadogRum.addAction('auth_register_success');
+      window.DD_RUM?.addAction('auth_register_success');
       navigate('/');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Registration failed');

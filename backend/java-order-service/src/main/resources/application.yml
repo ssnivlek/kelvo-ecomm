@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: rum-shop-order-service
+    name: kelvo-ecomm-order-service
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/rumshop}
     username: ${SPRING_DATASOURCE_USERNAME:rumshop}
@@ -33,6 +33,6 @@ management:
 
 # Datadog APM configuration (used when dd-java-agent is attached)
 dd:
-  service: rum-shop-order-service
+  service: kelvo-ecomm-order-service
   env: production
   version: 1.0.0

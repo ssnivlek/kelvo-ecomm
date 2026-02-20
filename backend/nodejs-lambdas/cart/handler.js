@@ -26,11 +26,36 @@ function calculateTotals(items) {
 }
 
 async function addItem(body) {
-  return tracer.trace('cart.addItem', async () => {
+  return tracer.trace('cart.addItem', async (span) => {
     const { sessionId, productId, productName, price, quantity = 1, imageUrl } = body;
 
     if (!sessionId || !productId || !productName || price === undefined) {
       return error('Missing required fields: sessionId, productId, productName, price', 400);
+    }
+
+    // BUG: Smart Watch Pro (product 3) fails when adding more than 2 units.
+    // This is intentional — used to demo Datadog RUM→APM error trace correlation.
+    if (String(productId) === '3') {
+      const cart = await getCart(sessionId);
+      const existing = cart.items.find((i) => i.productId === productId);
+      const newQty = (existing ? existing.quantity : 0) + (quantity || 1);
+      if (newQty > 2) {
+        const err = new Error(
+          `Inventory validation failed: product ${productId} ("${productName}") ` +
+          `cannot exceed 2 units per order — requested ${newQty}. ` +
+          `Contact warehouse-api.internal for stock allocation.`
+        );
+        err.code = 'INVENTORY_LIMIT_EXCEEDED';
+        console.error('[CART] Inventory check error:', err.message, { productId, productName, requestedQty: newQty });
+        if (span) {
+          span.setTag('error', true);
+          span.setTag('error.message', err.message);
+          span.setTag('error.type', 'InventoryLimitExceeded');
+          span.setTag('cart.productId', productId);
+          span.setTag('cart.requestedQty', newQty);
+        }
+        return error(err.message, 500);
+      }
     }
 
     const cart = await getCart(sessionId);
@@ -76,15 +101,25 @@ async function updateItemQuantity(body) {
     return error('Missing required fields: sessionId, productId, quantity', 400);
   }
 
+  if (quantity <= 0) {
+    return error('Quantity must be positive', 400);
+  }
+
+  // BUG: Smart Watch Pro (product 3) — same inventory limit on update.
+  if (String(productId) === '3' && quantity > 2) {
+    const errMsg =
+      `Inventory validation failed: product ${productId} ` +
+      `cannot exceed 2 units per order — requested ${quantity}. ` +
+      `Contact warehouse-api.internal for stock allocation.`;
+    console.error('[CART] Inventory check error on update:', errMsg, { productId, quantity });
+    return error(errMsg, 500);
+  }
+
   const cart = await getCart(sessionId);
   const item = cart.items.find((i) => i.productId === productId);
 
   if (!item) {
     return error('Item not found in cart', 404);
-  }
-
-  if (quantity <= 0) {
-    return error('Quantity must be positive', 400);
   }
 
   item.quantity = quantity;
