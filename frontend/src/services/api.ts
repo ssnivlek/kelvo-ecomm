@@ -104,7 +104,9 @@ export async function searchProducts(
 // Cart
 export interface CartResponse {
   items: CartItem[];
+  coupon?: string | null;
   subtotal: number;
+  discount?: number;
   tax: number;
   shipping: number;
   total: number;
@@ -140,8 +142,8 @@ export async function addToCart(
       }
     );
     return res.cart;
-  } catch {
-    throw new Error('Failed to add to cart');
+  } catch (err) {
+    throw err instanceof Error ? err : new Error('Failed to add to cart');
   }
 }
 
@@ -163,8 +165,8 @@ export async function updateCartItem(
       }
     );
     return res.cart;
-  } catch {
-    throw new Error('Failed to update cart');
+  } catch (err) {
+    throw err instanceof Error ? err : new Error('Failed to update cart');
   }
 }
 
@@ -191,6 +193,31 @@ export async function clearCart(sessionId: string): Promise<CartResponse> {
   } catch {
     return { items: [], subtotal: 0, tax: 0, shipping: 0, total: 0 };
   }
+}
+
+export async function applyCoupon(
+  sessionId: string,
+  couponCode: string
+): Promise<{ cart: CartResponse; message: string }> {
+  return fetchWithError<{ cart: CartResponse; message: string }>(
+    `${API_BASE.cart}/api/cart/apply-coupon`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ sessionId, couponCode }),
+    }
+  );
+}
+
+export async function removeCoupon(
+  sessionId: string
+): Promise<{ cart: CartResponse; message: string }> {
+  return fetchWithError<{ cart: CartResponse; message: string }>(
+    `${API_BASE.cart}/api/cart/remove-coupon`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ sessionId }),
+    }
+  );
 }
 
 // Auth

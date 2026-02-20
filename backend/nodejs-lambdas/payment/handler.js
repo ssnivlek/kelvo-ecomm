@@ -50,7 +50,7 @@ async function confirmPayment(paymentIntentId) {
 
     return {
       status: 'succeeded',
-      receiptUrl: `https://rumshop.com/receipts/${intent.id}`,
+      receiptUrl: `https://kelvo-ecomm.com/receipts/${intent.id}`,
       paymentIntentId: intent.id,
       amount: intent.amount / 100,
       currency: intent.currency,
@@ -68,7 +68,7 @@ async function handleCreateIntent(body) {
   const intent = await createIntent({
     amount: Number(amount),
     currency,
-    customerEmail: customerEmail || 'guest@rumshop.com',
+    customerEmail: customerEmail || 'guest@kelvo-ecomm.com',
     orderId: orderId || `order_${uuidv4()}`,
   });
 
@@ -113,6 +113,46 @@ function handleWebhook(body) {
   });
 }
 
+async function handleValidateCoupon(body) {
+  return tracer.trace('payment.validateCoupon', async (span) => {
+    const { couponCode } = body;
+
+    if (!couponCode) {
+      return error('Missing couponCode', 400);
+    }
+
+    const code = couponCode.toUpperCase().trim();
+    if (span) span.setTag('coupon.code', code);
+
+    const VALID_COUPONS = {
+      KELVO10:  { discountPercent: 10, label: '10% off your order' },
+      KELVO25:  { discountPercent: 25, label: '25% off your order' },
+      FRETE:    { discountPercent: 0,  label: 'Free shipping', freeShipping: true },
+      WELCOME5: { discountPercent: 5,  label: '5% welcome discount' },
+    };
+
+    if (code === 'BLACKFRIDAY') {
+      console.error('[PAYMENT] Coupon store failure: Redis connection timeout at coupon-store.internal:6380, pool exhausted after 3 retries', {
+        couponCode: code, upstream: 'coupon-store.internal:6380', retries: 3,
+      });
+      if (span) {
+        span.setTag('error', true);
+        span.setTag('error.message', 'Redis connection timeout at coupon-store.internal:6380');
+        span.setTag('error.type', 'UpstreamTimeout');
+        span.setTag('coupon.upstream', 'coupon-store.internal:6380');
+      }
+      return error('Could not apply coupon code', 500);
+    }
+
+    const coupon = VALID_COUPONS[code];
+    if (!coupon) {
+      return error('Invalid coupon code', 400);
+    }
+
+    return success(coupon);
+  });
+}
+
 async function handler(event, context) {
   try {
     if (event.httpMethod === 'OPTIONS') {
@@ -125,6 +165,7 @@ async function handler(event, context) {
     if (httpMethod === 'POST' && path.endsWith('/create-intent')) return handleCreateIntent(body);
     if (httpMethod === 'POST' && path.endsWith('/confirm')) return handleConfirm(body);
     if (httpMethod === 'POST' && path.endsWith('/webhook')) return handleWebhook(body);
+    if (httpMethod === 'POST' && path.endsWith('/validate-coupon')) return handleValidateCoupon(body);
 
     return error('Not Found', 404);
   } catch (err) {

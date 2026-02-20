@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiX, FiMinus, FiPlus, FiShoppingBag } from 'react-icons/fi';
+import { FiX, FiMinus, FiPlus, FiShoppingBag, FiTag } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import './CartDrawer.css';
@@ -11,12 +11,23 @@ export function CartDrawer() {
   const {
     items,
     totals,
+    coupon,
     isDrawerOpen,
     closeDrawer,
     updateQuantity,
     removeItem,
-    itemCount,
+    applyCoupon,
+    removeCoupon,
+    isLoading,
   } = useCart();
+
+  const [couponInput, setCouponInput] = useState('');
+
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) return;
+    await applyCoupon(couponInput.trim());
+    setCouponInput('');
+  };
 
   return (
     <AnimatePresence>
@@ -75,7 +86,7 @@ export function CartDrawer() {
                         </div>
                         <div className="cart-item-details">
                           <span className="cart-item-name">{item.productName}</span>
-                          <span className="cart-item-price">{item.price.toFixed(2)}</span>
+                          <span className="cart-item-price">${item.price.toFixed(2)}</span>
                           <div className="cart-item-actions">
                             <div className="quantity-controls">
                               <button
@@ -110,18 +121,55 @@ export function CartDrawer() {
                     ))}
                   </ul>
 
+                  <div className="coupon-section">
+                    {coupon ? (
+                      <div className="coupon-applied">
+                        <FiTag size={14} />
+                        <span className="coupon-code">{coupon}</span>
+                        <button className="coupon-remove-btn" onClick={removeCoupon}>
+                          <FiX size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="coupon-input-row">
+                        <input
+                          type="text"
+                          className="coupon-input"
+                          placeholder="Coupon code"
+                          value={couponInput}
+                          onChange={(e) => setCouponInput(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                          disabled={isLoading}
+                        />
+                        <button
+                          className="btn btn-sm coupon-apply-btn"
+                          onClick={handleApplyCoupon}
+                          disabled={isLoading || !couponInput.trim()}
+                        >
+                          Apply
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="cart-totals">
                     <div className="total-row">
                       <span>Subtotal</span>
                       <span>${totals.subtotal.toFixed(2)}</span>
                     </div>
+                    {(totals.discount ?? 0) > 0 && (
+                      <div className="total-row total-row-discount">
+                        <span>Discount</span>
+                        <span>-${(totals.discount ?? 0).toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="total-row">
                       <span>Tax</span>
                       <span>${totals.tax.toFixed(2)}</span>
                     </div>
                     <div className="total-row">
                       <span>Shipping</span>
-                      <span>${totals.shipping.toFixed(2)}</span>
+                      <span>{totals.shipping === 0 ? 'Free' : `$${totals.shipping.toFixed(2)}`}</span>
                     </div>
                     <div className="total-row total-row-final">
                       <span>Total</span>

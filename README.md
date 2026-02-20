@@ -678,7 +678,7 @@ Curl examples: [`docs/api-examples.sh`](docs/api-examples.sh)
 
 ### Cart (ECS Node.js) — `/api/cart`
 
-`POST /api/cart/add` · `GET /api/cart/{sessionId}` · `PUT /api/cart/update` · `DELETE /api/cart/{sessionId}/item/{productId}` · `DELETE /api/cart/{sessionId}`
+`POST /api/cart/add` · `GET /api/cart/{sessionId}` · `PUT /api/cart/update` · `DELETE /api/cart/{sessionId}/item/{productId}` · `DELETE /api/cart/{sessionId}` · `POST /api/cart/apply-coupon` · `POST /api/cart/remove-coupon`
 
 ### Auth (ECS Node.js) — `/api/auth`
 
@@ -686,7 +686,7 @@ Curl examples: [`docs/api-examples.sh`](docs/api-examples.sh)
 
 ### Payment (ECS Node.js) — `/api/payment`
 
-`POST /api/payment/create-intent` · `POST /api/payment/confirm` · `POST /api/payment/webhook`
+`POST /api/payment/create-intent` · `POST /api/payment/confirm` · `POST /api/payment/webhook` · `POST /api/payment/validate-coupon`
 
 ### Search (Lambda Python) — `/api/search`
 
@@ -702,7 +702,36 @@ Curl examples: [`docs/api-examples.sh`](docs/api-examples.sh)
 
 ---
 
+## Coupon Codes (Demo)
+
+Test discount coupons in the cart drawer:
+
+| Code | Effect |
+|------|--------|
+| `KELVO10` | 10% off your order (works) |
+| `KELVO25` | 25% off your order (works) |
+| `WELCOME5` | 5% welcome discount (works) |
+| `FRETE` | Free shipping (works) |
+| `BLACKFRIDAY` | Triggers a backend error — use this to demo Datadog error tracking and RUM-to-APM trace correlation |
+
+The coupon flow: **Frontend** -> **Cart Service** (`/api/cart/apply-coupon`) -> **Payment Service** (`/api/payment/validate-coupon`).
+`BLACKFRIDAY` intentionally causes a 500 error in the Payment Service (simulated Redis timeout), which propagates back through the Cart Service with detailed error tags in Datadog APM spans.
+
+---
+
+## Error Demos (Datadog Trace Correlation)
+
+### Smart Watch Pro — Cart Limit Error
+
+Add the product **Smart Watch Pro** (product #3) to your cart. The first 2 units succeed. When you try to add a 3rd unit, the backend returns a generic `"Error adding item"` message. The real error detail (`inventory sync timeout — warehouse-api.internal:8443 unreachable`) only appears in backend logs and Datadog APM traces — never exposed to the user. This demonstrates RUM error capture correlating with backend APM spans.
+
+### BLACKFRIDAY Coupon — Cross-Service Error
+
+Enter the coupon code `BLACKFRIDAY` in the cart drawer. The Cart Service calls the Payment Service to validate, which responds with a 500 error (simulated `coupon-store.internal:6380` Redis timeout). The user sees `"Could not apply coupon code"` while the full error chain is visible in Datadog APM traces across both services.
+
+---
+
 ## Demo Credentials
 
-Email: `demo@rumshop.com`
+Email: `demo@kelvo-ecomm.com`
 Password: `password123`

@@ -20,6 +20,7 @@ export interface CartItem {
 
 export interface CartTotals {
   subtotal: number;
+  discount?: number;
   tax: number;
   shipping: number;
   total: number;

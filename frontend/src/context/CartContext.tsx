@@ -15,6 +15,8 @@ import {
   updateCartItem as apiUpdateCartItem,
   removeFromCart as apiRemoveFromCart,
   clearCart as apiClearCart,
+  applyCoupon as apiApplyCoupon,
+  removeCoupon as apiRemoveCoupon,
 } from '../services/api';
 
 const SESSION_KEY = 'kelvo_ecomm_session_id';
@@ -46,9 +48,20 @@ function calculateTotals(items: CartItem[]): CartTotals {
   };
 }
 
+function applyServerTotals(res: any): CartTotals {
+  return {
+    subtotal: res.subtotal ?? 0,
+    discount: res.discount ?? 0,
+    tax: res.tax ?? 0,
+    shipping: res.shipping ?? 0,
+    total: res.total ?? 0,
+  };
+}
+
 interface CartState {
   items: CartItem[];
   totals: CartTotals;
+  coupon: string | null;
   isLoading: boolean;
   isDrawerOpen: boolean;
 }
@@ -59,6 +72,8 @@ interface CartContextValue extends CartState {
   removeItem: (productId: string | number) => Promise<void>;
   updateQuantity: (productId: string | number, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
+  applyCoupon: (code: string) => Promise<void>;
+  removeCoupon: () => Promise<void>;
   openDrawer: () => void;
   closeDrawer: () => void;
   toggleDrawer: () => void;
@@ -72,6 +87,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<CartState>({
     items: [],
     totals: { subtotal: 0, tax: 0, shipping: 0, total: 0 },
+    coupon: null,
     isLoading: false,
     isDrawerOpen: false,
   });
@@ -83,12 +99,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setState((s) => ({
         ...s,
         items: res.items,
-        totals: {
-          subtotal: res.subtotal,
-          tax: res.tax,
-          shipping: res.shipping,
-          total: res.total,
-        },
+        coupon: res.coupon ?? null,
+        totals: applyServerTotals(res),
         isLoading: false,
       }));
     } catch {
@@ -114,12 +126,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setState((s) => ({
           ...s,
           items: res.items,
-          totals: {
-            subtotal: res.subtotal,
-            tax: res.tax,
-            shipping: res.shipping,
-            total: res.total,
-          },
+          coupon: res.coupon ?? s.coupon,
+          totals: applyServerTotals(res),
           isLoading: false,
           isDrawerOpen: true,
         }));
@@ -129,33 +137,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           productName: product.name,
           quantity,
         });
-      } catch {
-        const newItem: CartItem = {
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Error adding item');
+        setState((s) => ({ ...s, isLoading: false }));
+        window.DD_RUM?.addAction('cart_add_error', {
           productId: product.id,
           productName: product.name,
-          price: product.price,
           quantity,
-          imageUrl: product.imageUrl ?? null,
-        };
-        setState((s) => {
-          const existing = s.items.find((i) => String(i.productId) === String(product.id));
-          const items = existing
-            ? s.items.map((i) =>
-                String(i.productId) === String(product.id)
-                  ? { ...i, quantity: i.quantity + quantity }
-                  : i
-              )
-            : [...s.items, newItem];
-          return {
-            ...s,
-            items,
-            totals: calculateTotals(items),
-            isLoading: false,
-            isDrawerOpen: true,
-          };
         });
-        toast.success(`Added ${product.name} to cart`);
-        window.DD_RUM?.addAction('cart_add', { productId: product.id, productName: product.name, quantity });
       }
     },
     [sessionId]
@@ -169,12 +158,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setState((s) => ({
           ...s,
           items: res.items,
-          totals: {
-            subtotal: res.subtotal,
-            tax: res.tax,
-            shipping: res.shipping,
-            total: res.total,
-          },
+          totals: applyServerTotals(res),
           isLoading: false,
         }));
         toast.success('Item removed from cart');
@@ -182,12 +166,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       } catch {
         setState((s) => {
           const items = s.items.filter((i) => String(i.productId) !== String(productId));
-          return {
-            ...s,
-            items,
-            totals: calculateTotals(items),
-            isLoading: false,
-          };
+          return { ...s, items, totals: calculateTotals(items), isLoading: false };
         });
         toast.success('Item removed from cart');
         window.DD_RUM?.addAction('cart_remove', { productId });
@@ -198,64 +177,76 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const updateQuantity = useCallback(
     async (productId: string | number, quantity: number) => {
-      if (quantity < 1) {
-        await removeItem(productId);
-        return;
-      }
+      if (quantity < 1) { await removeItem(productId); return; }
       setState((s) => ({ ...s, isLoading: true }));
       try {
         const res = await apiUpdateCartItem(sessionId, productId, quantity);
         setState((s) => ({
           ...s,
           items: res.items,
-          totals: {
-            subtotal: res.subtotal,
-            tax: res.tax,
-            shipping: res.shipping,
-            total: res.total,
-          },
+          totals: applyServerTotals(res),
           isLoading: false,
         }));
         window.DD_RUM?.addAction('cart_update', { productId, quantity });
-      } catch {
-        setState((s) => {
-          const items = s.items.map((i) =>
-            String(i.productId) === String(productId) ? { ...i, quantity } : i
-          );
-          return {
-            ...s,
-            items,
-            totals: calculateTotals(items),
-            isLoading: false,
-          };
-        });
-        window.DD_RUM?.addAction('cart_update', { productId, quantity });
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Error updating item');
+        setState((s) => ({ ...s, isLoading: false }));
       }
     },
     [sessionId, removeItem]
   );
 
-  const clearCart = useCallback(async () => {
+  const clearCartAction = useCallback(async () => {
     setState((s) => ({ ...s, isLoading: true }));
     try {
       await apiClearCart(sessionId);
-      setState({
-        items: [],
-        totals: { subtotal: 0, tax: 0, shipping: 0, total: 0 },
+    } catch { /* ignore */ }
+    setState({
+      items: [],
+      totals: { subtotal: 0, tax: 0, shipping: 0, total: 0 },
+      coupon: null,
+      isLoading: false,
+      isDrawerOpen: false,
+    });
+    toast.success('Cart cleared');
+    window.DD_RUM?.addAction('cart_clear');
+  }, [sessionId]);
+
+  const applyCoupon = useCallback(async (code: string) => {
+    setState((s) => ({ ...s, isLoading: true }));
+    try {
+      const res = await apiApplyCoupon(sessionId, code);
+      setState((s) => ({
+        ...s,
+        items: res.cart.items,
+        coupon: res.cart.coupon ?? code.toUpperCase(),
+        totals: applyServerTotals(res.cart),
         isLoading: false,
-        isDrawerOpen: false,
-      });
-      toast.success('Cart cleared');
-      window.DD_RUM?.addAction('cart_clear');
+      }));
+      toast.success(res.message || 'Coupon applied');
+      window.DD_RUM?.addAction('coupon_apply', { code: code.toUpperCase(), success: true });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not apply coupon code');
+      setState((s) => ({ ...s, isLoading: false }));
+      window.DD_RUM?.addAction('coupon_apply_error', { code: code.toUpperCase() });
+    }
+  }, [sessionId]);
+
+  const removeCouponAction = useCallback(async () => {
+    setState((s) => ({ ...s, isLoading: true }));
+    try {
+      const res = await apiRemoveCoupon(sessionId);
+      setState((s) => ({
+        ...s,
+        items: res.cart.items,
+        coupon: null,
+        totals: applyServerTotals(res.cart),
+        isLoading: false,
+      }));
+      toast.success('Coupon removed');
+      window.DD_RUM?.addAction('coupon_remove');
     } catch {
-      setState({
-        items: [],
-        totals: { subtotal: 0, tax: 0, shipping: 0, total: 0 },
-        isLoading: false,
-        isDrawerOpen: false,
-      });
-      toast.success('Cart cleared');
-      window.DD_RUM?.addAction('cart_clear');
+      setState((s) => ({ ...s, coupon: null, isLoading: false }));
     }
   }, [sessionId]);
 
@@ -274,7 +265,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     addItem,
     removeItem,
     updateQuantity,
-    clearCart,
+    clearCart: clearCartAction,
+    applyCoupon,
+    removeCoupon: removeCouponAction,
     openDrawer,
     closeDrawer,
     toggleDrawer,

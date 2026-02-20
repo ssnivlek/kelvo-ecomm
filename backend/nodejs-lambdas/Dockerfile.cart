@@ -68,6 +68,12 @@ const server = http.createServer(async (req, res) => {
     if (method === 'POST' && path === '/api/cart/add') {
       return sendResponse(res, await handler(makeEvent('POST', path, null, body), {}));
     }
+    if (method === 'POST' && path === '/api/cart/apply-coupon') {
+      return sendResponse(res, await handler(makeEvent('POST', path, null, body), {}));
+    }
+    if (method === 'POST' && path === '/api/cart/remove-coupon') {
+      return sendResponse(res, await handler(makeEvent('POST', path, null, body), {}));
+    }
     if (method === 'PUT' && path === '/api/cart/update') {
       return sendResponse(res, await handler(makeEvent('PUT', path, null, body), {}));
     }
