@@ -83,11 +83,16 @@ export function CheckoutPage() {
       await clearCart();
       setStep('success');
       window.DD_RUM?.addAction('checkout_complete', { orderId: order.id });
+      window.DD_RUM?.addAction('session_end', { reason: 'checkout_completed', orderId: order.id });
+      window.DD_RUM?.stopSession();
       navigate(`/order-confirmation/${order.id}`);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Checkout failed');
       setStep('error');
-      window.DD_RUM?.addAction('checkout_error', { error: String(err) });
+      window.DD_RUM?.addError(err instanceof Error ? err : new Error('Checkout failed'), {
+        source: 'custom',
+        context: { step: 'checkout', itemCount: items.length, total: totals.total },
+      });
     }
   };
 

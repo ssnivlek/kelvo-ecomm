@@ -140,10 +140,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       } catch (err) {
         toast.error(err instanceof Error ? err.message : 'Error adding item');
         setState((s) => ({ ...s, isLoading: false }));
-        window.DD_RUM?.addAction('cart_add_error', {
-          productId: product.id,
-          productName: product.name,
-          quantity,
+        window.DD_RUM?.addError(err instanceof Error ? err : new Error('Error adding item'), {
+          source: 'custom',
+          context: { productId: product.id, productName: product.name, quantity },
         });
       }
     },
@@ -191,6 +190,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       } catch (err) {
         toast.error(err instanceof Error ? err.message : 'Error updating item');
         setState((s) => ({ ...s, isLoading: false }));
+        window.DD_RUM?.addError(err instanceof Error ? err : new Error('Error updating item'), {
+          source: 'custom',
+          context: { productId, quantity },
+        });
       }
     },
     [sessionId, removeItem]
@@ -228,7 +231,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not apply coupon code');
       setState((s) => ({ ...s, isLoading: false }));
-      window.DD_RUM?.addAction('coupon_apply_error', { code: code.toUpperCase() });
+      window.DD_RUM?.addError(err instanceof Error ? err : new Error('Could not apply coupon code'), {
+        source: 'custom',
+        context: { couponCode: code.toUpperCase() },
+      });
     }
   }, [sessionId]);
 
