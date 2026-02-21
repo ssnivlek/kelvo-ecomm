@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FiTag, FiX } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -15,7 +16,7 @@ const PLACEHOLDER_IMG = '/images/products/placeholder.svg';
 
 export function CheckoutPage() {
   const navigate = useNavigate();
-  const { items, totals, sessionId, clearCart } = useCart();
+  const { items, totals, coupon, sessionId, clearCart, applyCoupon, removeCoupon, isLoading } = useCart();
   const { user } = useAuth();
   const [step, setStep] = useState<'form' | 'processing' | 'success' | 'error'>('form');
   const [orderId, setOrderId] = useState<number | null>(null);
@@ -30,6 +31,7 @@ export function CheckoutPage() {
     exp: '12/28',
     cvc: '123',
   });
+  const [couponInput, setCouponInput] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -263,10 +265,52 @@ export function CheckoutPage() {
                   </li>
                 ))}
               </ul>
+
+              <div className="checkout-coupon">
+                {coupon ? (
+                  <div className="coupon-applied">
+                    <FiTag size={14} />
+                    <span className="coupon-code">{coupon}</span>
+                    <button className="coupon-remove-btn" onClick={removeCoupon} type="button">
+                      <FiX size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="coupon-input-row">
+                    <input
+                      type="text"
+                      className="coupon-input"
+                      placeholder="Coupon code"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (couponInput.trim()) applyCoupon(couponInput.trim());
+                          setCouponInput('');
+                        }
+                      }}
+                      disabled={isLoading}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-sm coupon-apply-btn"
+                      onClick={() => { if (couponInput.trim()) applyCoupon(couponInput.trim()); setCouponInput(''); }}
+                      disabled={isLoading || !couponInput.trim()}
+                    >
+                      Apply
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div className="summary-totals">
                 <div><span>Subtotal</span><span>${totals.subtotal.toFixed(2)}</span></div>
+                {(totals.discount ?? 0) > 0 && (
+                  <div className="discount-row"><span>Discount</span><span>-${(totals.discount ?? 0).toFixed(2)}</span></div>
+                )}
                 <div><span>Tax</span><span>${totals.tax.toFixed(2)}</span></div>
-                <div><span>Shipping</span><span>${totals.shipping.toFixed(2)}</span></div>
+                <div><span>Shipping</span><span>{totals.shipping === 0 ? 'Free' : `$${totals.shipping.toFixed(2)}`}</span></div>
                 <div className="total-row"><span>Total</span><span>${totals.total.toFixed(2)}</span></div>
               </div>
               <button type="submit" className="btn btn-primary place-order-btn">
