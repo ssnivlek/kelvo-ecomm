@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 # CORS headers for API Gateway responses
 CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Headers": "*",
     "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
 }
 
