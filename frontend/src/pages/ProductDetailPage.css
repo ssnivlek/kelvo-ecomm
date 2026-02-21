@@ -24,6 +24,27 @@
   .product-detail-layout {
     grid-template-columns: 1fr;
   }
+  .product-detail-image {
+    position: static;
+    max-height: 360px;
+  }
+  .product-detail-info h1 {
+    font-size: 1.375rem;
+  }
+  .product-detail-info .product-price {
+    font-size: 1.5rem;
+  }
+  .product-actions {
+    flex-direction: column;
+  }
+  .add-cart-btn {
+    min-width: unset;
+    width: 100%;
+  }
+  .recommendations-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+  }
 }
 
 .product-detail-image {

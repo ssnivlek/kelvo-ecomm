@@ -11,6 +11,24 @@
   }
 }
 
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-row {
+    flex-direction: column;
+  }
+  .summary-card {
+    position: static;
+  }
+  .checkout-empty,
+  .checkout-processing,
+  .checkout-success,
+  .checkout-error {
+    padding: 2rem 1rem;
+  }
+}
+
 .checkout-form-section h2 {
   font-size: 1.25rem;
   font-weight: 600;

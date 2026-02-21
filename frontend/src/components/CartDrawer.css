@@ -266,3 +266,19 @@
   font-size: 1rem;
   margin-top: 0.5rem;
 }
+
+@media (max-width: 480px) {
+  .cart-drawer {
+    max-width: 100%;
+  }
+  .cart-drawer-header {
+    padding: 1rem;
+  }
+  .cart-drawer-body {
+    padding: 1rem;
+  }
+  .cart-item-image {
+    width: 56px;
+    height: 56px;
+  }
+}

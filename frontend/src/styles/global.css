@@ -316,3 +316,16 @@ textarea::placeholder {
   border-radius: var(--radius-md) !important;
   box-shadow: var(--shadow-lg) !important;
 }
+
+@media (max-width: 480px) {
+  .grid-products {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .section {
+    padding: 2rem 0;
+  }
+  .section-title {
+    font-size: 1.375rem;
+  }
+}

@@ -9,6 +9,13 @@
   .search-results-layout {
     grid-template-columns: 1fr;
   }
+  .search-filters {
+    position: static;
+  }
+  .search-results-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 .search-filters {

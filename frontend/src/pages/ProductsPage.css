@@ -108,3 +108,23 @@
     background-position: -200% 0;
   }
 }
+
+@media (max-width: 768px) {
+  .page-title {
+    font-size: 1.5rem;
+  }
+  .products-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .category-buttons {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  .cat-btn {
+    flex-shrink: 0;
+    font-size: 0.8125rem;
+  }
+}
