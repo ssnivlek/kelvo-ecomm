@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="puzzleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e293b"/>
+      <stop offset="100%" style="stop-color:#3b82f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" rx="80" fill="url(#puzzleGrad)"/>
+  <path d="M120 140 L120 180 Q120 200 140 200 L180 200 L180 240 Q180 260 200 260 L240 260 L240 220 Q240 200 260 200 L300 200 Q320 200 320 180 L320 140 Q320 120 300 120 L260 120 L260 80 Q260 60 240 60 L200 60 Q180 60 180 80 L180 120 L140 120 Q120 120 120 140Z" fill="#60a5fa" stroke="#93c5fd" stroke-width="2"/>
+  <path d="M200 260 L200 300 Q200 320 220 320 L260 320 L260 360 Q260 380 280 380 L320 380 Q340 380 340 360 L340 320 L380 320 Q400 320 400 300 L400 260 Q400 240 380 240 L340 240 L340 200 Q340 180 320 180 L280 180 Q260 180 260 200 L260 240 L220 240 Q200 240 200 260Z" fill="#38bdf8" stroke="#7dd3fc" stroke-width="2"/>
+  <path d="M80 200 L80 240 Q80 260 100 260 L140 260 L140 300 Q140 320 160 320 L200 320 L200 280 Q200 260 220 260 L260 260 L260 220 Q260 200 240 200 L200 200 Q180 200 180 180 L180 140 L140 140 Q120 140 120 160 L120 200 L80 200Z" fill="#818cf8" stroke="#a5b4fc" stroke-width="2"/>
+</svg>

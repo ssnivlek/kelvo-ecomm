@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="bg-earbuds" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#0d9488"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" rx="80" fill="url(#bg-earbuds)"/>
+  <!-- Charging case base -->
+  <rect x="100" y="200" width="200" height="120" rx="20" fill="#ffffff" opacity="0.9"/>
+  <rect x="115" y="215" width="170" height="90" rx="12" fill="#1e3a5f" opacity="0.4"/>
+  <!-- Case lid -->
+  <rect x="100" y="140" width="200" height="70" rx="20" fill="#ffffff" opacity="0.95"/>
+  <!-- Earbud slots in case -->
+  <ellipse cx="150" cy="255" rx="35" ry="25" fill="#0d9488" opacity="0.5"/>
+  <ellipse cx="250" cy="255" rx="35" ry="25" fill="#0d9488" opacity="0.5"/>
+  <!-- Left earbud -->
+  <circle cx="100" cy="180" r="22" fill="#ffffff" opacity="0.9"/>
+  <circle cx="100" cy="180" r="12" fill="#0d9488" opacity="0.6"/>
+  <!-- Right earbud -->
+  <circle cx="300" cy="180" r="22" fill="#ffffff" opacity="0.9"/>
+  <circle cx="300" cy="180" r="12" fill="#0d9488" opacity="0.6"/>
+  <!-- Earbud stems -->
+  <rect x="88" y="200" width="24" height="25" rx="4" fill="#ffffff" opacity="0.9"/>
+  <rect x="288" y="200" width="24" height="25" rx="4" fill="#ffffff" opacity="0.9"/>
+</svg>

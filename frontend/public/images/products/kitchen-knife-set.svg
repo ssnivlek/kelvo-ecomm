@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="gradient-kitchen-knife-set" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#14b8a6"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" rx="80" fill="url(#gradient-kitchen-knife-set)"/>
+  <!-- Chef knife blade -->
+  <polygon points="120,280 140,120 160,100 180,120 160,280" fill="#94a3b8"/>
+  <polygon points="125,270 142,130 158,115 172,130 155,270" fill="#cbd5e1"/>
+  <!-- Chef knife handle -->
+  <rect x="120" y="260" width="50" height="40" rx="4" fill="#78716c"/>
+  <!-- Paring knife blade -->
+  <polygon points="220,280 230,180 245,165 255,180 245,280" fill="#94a3b8"/>
+  <!-- Paring knife handle -->
+  <rect x="218" y="265" width="35" height="35" rx="4" fill="#78716c"/>
+  <!-- Bread knife blade -->
+  <polygon points="280,280 295,140 310,125 325,140 310,280" fill="#94a3b8"/>
+  <line x1="295" y1="200" x2="310" y2="200" stroke="#64748b" stroke-width="1"/>
+  <line x1="298" y1="230" x2="307" y2="230" stroke="#64748b" stroke-width="1"/>
+  <!-- Bread knife handle -->
+  <rect x="278" y="260" width="45" height="40" rx="4" fill="#78716c"/>
+</svg>

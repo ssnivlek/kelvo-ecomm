@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="hydrating-face-cream-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#0d9488"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" rx="80" fill="url(#hydrating-face-cream-bg)"/>
+  <!-- Jar body -->
+  <ellipse cx="200" cy="240" rx="70" ry="80" fill="#ccfbf1"/>
+  <!-- Jar lid -->
+  <ellipse cx="200" cy="160" rx="75" ry="25" fill="#5eead4"/>
+  <!-- Lid top -->
+  <ellipse cx="200" cy="145" rx="60" ry="20" fill="#2dd4bf"/>
+  <!-- Lid rim -->
+  <rect x="125" y="155" width="150" height="15" rx="4" fill="#14b8a6"/>
+</svg>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="gradientDumbbells" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2d1b4e"/>
+      <stop offset="100%" style="stop-color:#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" rx="80" fill="url(#gradientDumbbells)"/>
+  <!-- Dumbbell pair - left -->
+  <rect x="80" y="170" width="50" height="60" rx="8" fill="#c4b5fd"/>
+  <circle cx="105" cy="200" r="35" fill="#e9d5ff"/>
+  <rect x="55" y="185" width="25" height="30" rx="4" fill="#a78bfa"/>
+  <!-- Dumbbell pair - right -->
+  <rect x="270" y="170" width="50" height="60" rx="8" fill="#c4b5fd"/>
+  <circle cx="295" cy="200" r="35" fill="#e9d5ff"/>
+  <rect x="320" y="185" width="25" height="30" rx="4" fill="#a78bfa"/>
+  <!-- Connecting bar -->
+  <rect x="130" y="192" width="140" height="16" rx="8" fill="#a78bfa"/>
+</svg>

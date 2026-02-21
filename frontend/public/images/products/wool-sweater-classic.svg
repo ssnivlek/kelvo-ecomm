@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="sweater-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b1f5e"/>
+      <stop offset="100%" style="stop-color:#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="sweater-fill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#d97706"/>
+      <stop offset="100%" style="stop-color:#b45309"/>
+    </linearGradient>
+    <rect id="sweater-rect" width="400" height="400" rx="24" ry="24"/>
+  </defs>
+  <use href="#sweater-rect" fill="url(#sweater-bg)"/>
+  <!-- Sweater body -->
+  <path d="M120 140 L120 320 L280 320 L280 140 L260 140 L260 200 L240 200 L240 140 L160 140 L160 200 L140 200 L140 140 Z" fill="url(#sweater-fill)" stroke="#92400e" stroke-width="2"/>
+  <!-- Neck opening -->
+  <ellipse cx="200" cy="150" rx="35" ry="25" fill="#1e293b"/>
+  <!-- Sleeve left -->
+  <path d="M120 140 L80 180 L80 220 L120 200 Z" fill="url(#sweater-fill)" stroke="#92400e" stroke-width="2"/>
+  <!-- Sleeve right -->
+  <path d="M280 140 L320 180 L320 220 L280 200 Z" fill="url(#sweater-fill)" stroke="#92400e" stroke-width="2"/>
+  <!-- Ribbing lines -->
+  <line x1="200" y1="240" x2="200" y2="320" stroke="#92400e" stroke-width="1" opacity="0.6"/>
+  <line x1="170" y1="260" x2="230" y2="260" stroke="#92400e" stroke-width="1" opacity="0.6"/>
+</svg>

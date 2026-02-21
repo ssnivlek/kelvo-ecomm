@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="shorts-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#0d9488"/>
+    </linearGradient>
+    <linearGradient id="shorts-fill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#e5e7eb"/>
+      <stop offset="100%" style="stop-color:#9ca3af"/>
+    </linearGradient>
+    <rect id="shorts-rect" width="400" height="400" rx="24" ry="24"/>
+  </defs>
+  <use href="#shorts-rect" fill="url(#shorts-bg)"/>
+  <!-- Waistband -->
+  <path d="M130 140 L270 140 L265 165 L135 165 Z" fill="#6b7280" stroke="#4b5563" stroke-width="2"/>
+  <!-- Left leg -->
+  <path d="M135 165 L120 320 L170 320 L185 165 Z" fill="url(#shorts-fill)" stroke="#6b7280" stroke-width="2"/>
+  <!-- Right leg -->
+  <path d="M265 165 L215 165 L230 320 L280 320 Z" fill="url(#shorts-fill)" stroke="#6b7280" stroke-width="2"/>
+  <!-- Center seam -->
+  <line x1="200" y1="165" x2="200" y2="320" stroke="#6b7280" stroke-width="1" opacity="0.5"/>
+  <!-- Side stripe left -->
+  <path d="M125 180 L128 310" stroke="#0d9488" stroke-width="4" stroke-linecap="round"/>
+  <!-- Side stripe right -->
+  <path d="M275 180 L272 310" stroke="#0d9488" stroke-width="4" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="parkaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e293b"/>
+      <stop offset="100%" style="stop-color:#3b82f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" rx="80" fill="url(#parkaGrad)"/>
+  <g transform="translate(200, 210)">
+    <!-- Hood -->
+    <path d="M-50,-90 Q-60,-120 -30,-130 Q0,-140 30,-130 Q60,-120 50,-90" fill="#1e40af" stroke="#93c5fd" stroke-width="2"/>
+    <!-- Fur trim -->
+    <path d="M-50,-90 Q-40,-85 -30,-90 Q-20,-95 -10,-90 Q0,-85 10,-90 Q20,-95 30,-90 Q40,-85 50,-90" fill="#d1d5db" stroke="#9ca3af" stroke-width="1"/>
+    <!-- Body -->
+    <rect x="-55" y="-90" width="110" height="130" rx="10" fill="#1e3a8a"/>
+    <!-- Zipper -->
+    <line x1="0" y1="-85" x2="0" y2="35" stroke="#93c5fd" stroke-width="2"/>
+    <!-- Left pocket -->
+    <rect x="-45" y="-10" width="35" height="25" rx="4" fill="#1e40af" stroke="#93c5fd" stroke-width="1"/>
+    <!-- Right pocket -->
+    <rect x="10" y="-10" width="35" height="25" rx="4" fill="#1e40af" stroke="#93c5fd" stroke-width="1"/>
+    <!-- Left sleeve -->
+    <rect x="-85" y="-80" width="35" height="90" rx="8" fill="#1e3a8a" transform="rotate(-10, -67, -35)"/>
+    <!-- Right sleeve -->
+    <rect x="50" y="-80" width="35" height="90" rx="8" fill="#1e3a8a" transform="rotate(10, 67, -35)"/>
+  </g>
+</svg>

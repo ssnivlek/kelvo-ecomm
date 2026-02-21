@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="nail-polish-collection-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#14b8a6"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" rx="80" fill="url(#nail-polish-collection-bg)"/>
+  <!-- Left bottle -->
+  <rect x="90" y="140" width="55" height="150" rx="6" fill="#99f6e4"/>
+  <rect x="90" y="110" width="55" height="35" rx="4" fill="#5eead4"/>
+  <ellipse cx="117" cy="105" rx="27" ry="10" fill="#2dd4bf"/>
+  <!-- Center bottle -->
+  <rect x="172" y="120" width="56" height="170" rx="6" fill="#99f6e4"/>
+  <rect x="172" y="85" width="56" height="40" rx="4" fill="#5eead4"/>
+  <ellipse cx="200" cy="78" rx="28" ry="11" fill="#2dd4bf"/>
+  <!-- Right bottle -->
+  <rect x="254" y="150" width="56" height="140" rx="6" fill="#99f6e4"/>
+  <rect x="254" y="120" width="56" height="35" rx="4" fill="#5eead4"/>
+  <ellipse cx="282" cy="115" rx="28" ry="10" fill="#2dd4bf"/>
+</svg>

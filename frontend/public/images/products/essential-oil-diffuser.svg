@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="essential-oil-diffuser-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2d1b4e"/>
+      <stop offset="100%" style="stop-color:#9333ea"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" rx="80" fill="url(#essential-oil-diffuser-bg)"/>
+  <!-- Base -->
+  <ellipse cx="200" cy="320" rx="90" ry="25" fill="#c4b5fd"/>
+  <!-- Bowl body -->
+  <path d="M 120 320 Q 120 180 200 140 Q 280 180 280 320 Z" fill="#ddd6fe"/>
+  <!-- Inner bowl -->
+  <ellipse cx="200" cy="200" rx="60" ry="50" fill="#e9d5ff"/>
+  <!-- Mist lines -->
+  <path d="M 160 180 Q 180 120 200 100" stroke="#a78bfa" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M 200 160 Q 220 100 240 80" stroke="#a78bfa" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M 240 180 Q 220 120 200 100" stroke="#a78bfa" stroke-width="3" fill="none" stroke-linecap="round"/>
+</svg>

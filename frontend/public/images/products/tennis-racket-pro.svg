@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="gradientTennisRacket" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e293b"/>
+      <stop offset="100%" style="stop-color:#3b82f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" rx="80" fill="url(#gradientTennisRacket)"/>
+  <!-- Racket head (oval) -->
+  <ellipse cx="200" cy="140" rx="75" ry="55" fill="none" stroke="#93c5fd" stroke-width="8"/>
+  <!-- Strings - vertical -->
+  <line x1="155" y1="95" x2="155" y2="185" stroke="#bfdbfe" stroke-width="2"/>
+  <line x1="175" y1="90" x2="175" y2="190" stroke="#bfdbfe" stroke-width="2"/>
+  <line x1="200" y1="88" x2="200" y2="192" stroke="#bfdbfe" stroke-width="2"/>
+  <line x1="225" y1="90" x2="225" y2="190" stroke="#bfdbfe" stroke-width="2"/>
+  <line x1="245" y1="95" x2="245" y2="185" stroke="#bfdbfe" stroke-width="2"/>
+  <!-- Strings - horizontal -->
+  <line x1="130" y1="120" x2="270" y2="120" stroke="#bfdbfe" stroke-width="2"/>
+  <line x1="135" y1="140" x2="265" y2="140" stroke="#bfdbfe" stroke-width="2"/>
+  <line x1="140" y1="160" x2="260" y2="160" stroke="#bfdbfe" stroke-width="2"/>
+  <!-- Handle -->
+  <rect x="185" y="185" width="30" height="120" rx="6" fill="#60a5fa"/>
+  <rect x="190" y="290" width="20" height="30" rx="4" fill="#93c5fd"/>
+</svg>
