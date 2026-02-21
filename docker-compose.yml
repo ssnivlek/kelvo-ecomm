@@ -187,9 +187,6 @@ services:
       - JWT_SECRET=${JWT_SECRET:-kelvo-ecomm-local-secret-key-2024}
       - PORT=3002
       - DATABASE_URL=postgresql://rumshop:rumshop@postgres:5432/rumshop
-      - SMTP_HOST=mailpit
-      - SMTP_PORT=1025
-      - SMTP_FROM=noreply@kelvo-ecomm.com
     ports:
       - "3002:3002"
     volumes:
@@ -305,20 +302,6 @@ services:
       - datadog-agent
     labels:
       com.datadoghq.ad.logs: '[{"source":"python","service":"kelvo-ecomm-notifications"}]'
-    networks:
-      - rumshop
-
-  # ────────────────────────────────────────────────────────────
-  # Mailpit — SMTP server with web UI (replaces AWS SES locally)
-  # Web UI: http://localhost:8025
-  # SMTP: localhost:1025
-  # ────────────────────────────────────────────────────────────
-  mailpit:
-    image: axllent/mailpit:latest
-    container_name: kelvo-ecomm-mailpit
-    ports:
-      - "8025:8025"
-      - "1025:1025"
     networks:
       - rumshop
 

@@ -4,6 +4,26 @@ import { login as apiLogin, register as apiRegister, getProfile } from '../servi
 
 const TOKEN_KEY = 'kelvo_ecomm_token';
 
+function rumSetUser(user: { id: string; email: string; name: string }) {
+  const rum = (window as any).DD_RUM;
+  if (!rum) return;
+  if (typeof rum.onReady === 'function') {
+    rum.onReady(() => (window as any).DD_RUM.setUser(user));
+  } else if (typeof rum.setUser === 'function') {
+    rum.setUser(user);
+  }
+}
+
+function rumClearUser() {
+  const rum = (window as any).DD_RUM;
+  if (!rum) return;
+  if (typeof rum.onReady === 'function') {
+    rum.onReady(() => (window as any).DD_RUM.clearUser());
+  } else if (typeof rum.clearUser === 'function') {
+    rum.clearUser();
+  }
+}
+
 interface AuthContextValue {
   user: User | null;
   token: string | null;
@@ -33,11 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const profile = await getProfile(t);
       setUser(profile);
       setToken(t);
-      window.DD_RUM?.setUser({
-        id: profile.email,
-        email: profile.email,
-        name: profile.name,
-      });
+      rumSetUser({ id: profile.email, email: profile.email, name: profile.name });
     } catch {
       localStorage.removeItem(TOKEN_KEY);
       setUser(null);
@@ -56,11 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(TOKEN_KEY, t);
     setToken(t);
     setUser(u);
-    window.DD_RUM?.setUser({
-      id: u.email,
-      email: u.email,
-      name: u.name,
-    });
+    rumSetUser({ id: u.email, email: u.email, name: u.name });
     window.DD_RUM?.addAction('auth_login', { email: u.email });
   }, []);
 
@@ -69,11 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(TOKEN_KEY, t);
     setToken(t);
     setUser(u);
-    window.DD_RUM?.setUser({
-      id: u.email,
-      email: u.email,
-      name: u.name,
-    });
+    rumSetUser({ id: u.email, email: u.email, name: u.name });
     window.DD_RUM?.addAction('auth_register', { email: u.email });
   }, []);
 
@@ -81,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(TOKEN_KEY);
     setToken(null);
     setUser(null);
-    window.DD_RUM?.clearUser();
+    rumClearUser();
     window.DD_RUM?.addAction('auth_logout');
   }, []);
 

@@ -72,7 +72,7 @@ export function CheckoutPage() {
       await confirmPayment(paymentIntentId);
       window.DD_RUM?.addAction('checkout_payment_confirmed');
 
-      await sendOrderConfirmation({
+      sendOrderConfirmation({
         orderId: order.id,
         customerEmail: form.email,
         customerName: form.name,
@@ -82,7 +82,7 @@ export function CheckoutPage() {
           price: i.price,
         })),
         totalAmount: totals.total,
-      });
+      }).catch(() => {});
 
       await clearCart();
       setStep('success');
