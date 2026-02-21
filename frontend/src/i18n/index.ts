@@ -23,6 +23,7 @@ i18n
     },
     fallbackLng: 'en',
     interpolation: { escapeValue: false },
+    react: { useSuspense: false },
     detection: {
       order: ['localStorage', 'navigator'],
       lookupLocalStorage: 'kelvo_ecomm_lang',
