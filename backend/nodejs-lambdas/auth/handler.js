@@ -6,10 +6,18 @@
 const tracer = require('../shared/tracer');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const net = require('net');
 const { success, error, created, CORS_HEADERS } = require('../shared/responses');
 const { getUserByEmail, createUser } = require('../shared/postgres');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'kelvo-ecomm-secret-key-2024';
+const SMTP_HOST = process.env.SMTP_HOST || 'localhost';
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || '1025', 10);
+const SMTP_FROM = process.env.SMTP_FROM || 'noreply@kelvo-ecomm.com';
+
+if (JWT_SECRET === 'kelvo-ecomm-secret-key-2024') {
+  console.warn('[AUTH] WARNING: Using default JWT_SECRET — set a custom JWT_SECRET env var in production');
+}
 const JWT_EXPIRY = '24h';
 
 function hashPassword(password) {
@@ -36,11 +44,44 @@ function getBearerToken(headers) {
   return auth.slice(7);
 }
 
+function sendSmtpEmail(to, subject, html) {
+  return new Promise((resolve) => {
+    const socket = net.createConnection(SMTP_PORT, SMTP_HOST, () => {
+      let step = 0;
+      const commands = [
+        `EHLO kelvo-ecomm\r\n`,
+        `MAIL FROM:<${SMTP_FROM}>\r\n`,
+        `RCPT TO:<${to}>\r\n`,
+        `DATA\r\n`,
+        `From: Kelvo E-Comm <${SMTP_FROM}>\r\nTo: ${to}\r\nSubject: ${subject}\r\nContent-Type: text/html; charset=utf-8\r\n\r\n${html}\r\n.\r\n`,
+        `QUIT\r\n`,
+      ];
+
+      socket.on('data', () => {
+        if (step < commands.length) {
+          socket.write(commands[step]);
+          step++;
+        }
+      });
+    });
+    socket.on('end', () => resolve(true));
+    socket.on('error', (err) => {
+      console.error('[AUTH] SMTP error:', err.message);
+      resolve(false);
+    });
+    socket.setTimeout(5000, () => { socket.destroy(); resolve(false); });
+  });
+}
+
 async function register(body) {
   const { email, name, password } = body;
 
   if (!email || !name || !password) {
     return error('Missing required fields: email, name, password', 400);
+  }
+
+  if (password.length < 6) {
+    return error('Password must be at least 6 characters', 400);
   }
 
   const normalizedEmail = email.toLowerCase().trim();
@@ -54,6 +95,18 @@ async function register(body) {
 
   const token = generateToken({ email: normalizedEmail });
   const user = await getUserByEmail(normalizedEmail);
+
+  sendSmtpEmail(
+    normalizedEmail,
+    'Welcome to Kelvo E-Comm!',
+    `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px">
+      <h1 style="color:#1a1a2e">Welcome, ${name}!</h1>
+      <p>Your account has been created successfully.</p>
+      <p>Start exploring our products and enjoy your shopping experience.</p>
+      <hr style="border:none;border-top:1px solid #eee;margin:20px 0">
+      <p style="color:#888;font-size:12px">Kelvo E-Comm &mdash; Premium Products, Exceptional Experience</p>
+    </div>`
+  ).catch(() => {});
 
   return created({
     message: 'User registered successfully',

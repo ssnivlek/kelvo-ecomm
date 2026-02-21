@@ -105,7 +105,7 @@ export function LoginPage() {
                 />
               </div>
               <p className="demo-hint">
-                Demo: try demo@rumshop.com / password123
+                Demo: try demo@kelvo-ecomm.com / password123
               </p>
               <button
                 type="submit"

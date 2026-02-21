@@ -36,15 +36,15 @@ async function initDb(retries = 15) {
 
       const { rows } = await pool.query(
         'SELECT email FROM users WHERE email = $1',
-        ['demo@rumshop.com']
+        ['demo@kelvo-ecomm.com']
       );
       if (rows.length === 0) {
         const hash = bcrypt.hashSync('password123', 10);
         await pool.query(
           'INSERT INTO users (email, name, password_hash) VALUES ($1, $2, $3)',
-          ['demo@rumshop.com', 'Demo User', hash]
+          ['demo@kelvo-ecomm.com', 'Demo User', hash]
         );
-        console.log('[PostgreSQL] Demo user seeded (demo@rumshop.com / password123)');
+        console.log('[PostgreSQL] Demo user seeded (demo@kelvo-ecomm.com / password123)');
       }
 
       console.log('[PostgreSQL] Connected and initialized');
