@@ -2,26 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiTruck, FiCreditCard, FiHeadphones, FiRotateCcw } from 'react-icons/fi';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { ProductCard } from '../components/ProductCard';
 import { fetchProducts, getRecommendations } from '../services/api';
 import { Product } from '../types';
 import './HomePage.css';
 
 const CATEGORIES = [
-  { name: 'Electronics', slug: 'electronics', icon: '📱' },
-  { name: 'Clothing', slug: 'clothing', icon: '👕' },
-  { name: 'Home & Kitchen', slug: 'home-kitchen', icon: '🏠' },
-  { name: 'Sports', slug: 'sports', icon: '⚽' },
-];
-
-const FEATURES = [
-  { icon: FiTruck, title: 'Fast Shipping', desc: 'Free delivery on orders over $50' },
-  { icon: FiCreditCard, title: 'Secure Payment', desc: '100% secure checkout' },
-  { icon: FiHeadphones, title: '24/7 Support', desc: 'Dedicated customer service' },
-  { icon: FiRotateCcw, title: 'Easy Returns', desc: '30-day hassle-free returns' },
+  { name: 'Electronics', icon: '📱' },
+  { name: 'Clothing', icon: '👕' },
+  { name: 'Home & Kitchen', icon: '🏠' },
+  { name: 'Sports', icon: '⚽' },
+  { name: 'Books', icon: '📚' },
+  { name: 'Beauty', icon: '💄' },
+  { name: 'Toys & Games', icon: '🎮' },
 ];
 
 export function HomePage() {
+  const { t } = useTranslation();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,6 +34,13 @@ export function HomePage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const FEATURES = [
+    { icon: FiTruck, titleKey: 'home.fastShipping', descKey: 'home.fastShippingDesc' },
+    { icon: FiCreditCard, titleKey: 'home.securePayment', descKey: 'home.securePaymentDesc' },
+    { icon: FiHeadphones, titleKey: 'home.support', descKey: 'home.supportDesc' },
+    { icon: FiRotateCcw, titleKey: 'home.easyReturns', descKey: 'home.easyReturnsDesc' },
+  ];
+
   return (
     <main className="home-page">
       <section className="hero">
@@ -45,23 +50,21 @@ export function HomePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1>Premium Products, Exceptional Experience</h1>
-          <p className="hero-tagline">
-            Discover curated quality at Kelvo E-Comm. From electronics to lifestyle — we've got you covered.
-          </p>
+          <h1>{t('hero.title')}</h1>
+          <p className="hero-tagline">{t('hero.subtitle')}</p>
           <Link to="/products" className="btn btn-primary hero-cta">
-            Shop Now
+            {t('hero.cta')}
           </Link>
         </motion.div>
       </section>
 
       <section className="section featured-section">
         <div className="container">
-          <h2 className="section-title">Featured Products</h2>
+          <h2 className="section-title">{t('hero.featuredTitle')}</h2>
           {loading ? (
             <div className="products-loading">
               <div className="spinner" />
-              <p>Loading products...</p>
+              <p>{t('home.loading')}</p>
             </div>
           ) : (
             <div className="grid-products">
@@ -72,7 +75,7 @@ export function HomePage() {
           )}
           <div className="section-cta">
             <Link to="/products" className="btn btn-outline">
-              View All Products
+              {t('home.viewAll')}
             </Link>
           </div>
         </div>
@@ -80,16 +83,16 @@ export function HomePage() {
 
       <section className="section categories-section">
         <div className="container">
-          <h2 className="section-title">Shop by Category</h2>
+          <h2 className="section-title">{t('home.shopByCategory')}</h2>
           <div className="categories-grid">
             {CATEGORIES.map((cat) => (
               <Link
-                key={cat.slug}
+                key={cat.name}
                 to={`/products?category=${encodeURIComponent(cat.name)}`}
                 className="category-card card"
               >
                 <span className="category-icon">{cat.icon}</span>
-                <h3>{cat.name}</h3>
+                <h3>{t(`categories.${cat.name}`, cat.name)}</h3>
               </Link>
             ))}
           </div>
@@ -98,15 +101,15 @@ export function HomePage() {
 
       <section className="section features-section">
         <div className="container">
-          <h2 className="section-title">Why Choose Us</h2>
+          <h2 className="section-title">{t('home.whyChooseUs')}</h2>
           <div className="features-grid">
-            {FEATURES.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="feature-card">
+            {FEATURES.map(({ icon: Icon, titleKey, descKey }) => (
+              <div key={titleKey} className="feature-card">
                 <div className="feature-icon">
                   <Icon size={28} />
                 </div>
-                <h3>{title}</h3>
-                <p>{desc}</p>
+                <h3>{t(titleKey)}</h3>
+                <p>{t(descKey)}</p>
               </div>
             ))}
           </div>
@@ -116,8 +119,8 @@ export function HomePage() {
       <section className="section newsletter-section">
         <div className="container">
           <div className="newsletter-card">
-            <h2>Stay Updated</h2>
-            <p>Subscribe for exclusive offers and new arrivals.</p>
+            <h2>{t('home.stayUpdated')}</h2>
+            <p>{t('home.stayUpdatedDesc')}</p>
             <form
               className="newsletter-form"
               onSubmit={(e) => {
@@ -127,12 +130,12 @@ export function HomePage() {
             >
               <input
                 type="email"
-                placeholder="Enter your email"
+                placeholder={t('home.emailPlaceholder')}
                 required
                 className="newsletter-input"
               />
               <button type="submit" className="btn btn-primary">
-                Subscribe
+                {t('home.subscribe')}
               </button>
             </form>
           </div>

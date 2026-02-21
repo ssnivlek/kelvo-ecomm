@@ -1,9 +1,5 @@
 import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-
-declare global {
-  interface Window { DD_RUM?: any; DD_LOGS?: any; }
-}
 import {
   CartItem,
   CartTotals,

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FiShoppingCart, FiStar } from 'react-icons/fi';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { ProductCard } from '../components/ProductCard';
 import { fetchProduct, getRecommendations } from '../services/api';
 import { useCart } from '../context/CartContext';
@@ -11,6 +12,7 @@ import './ProductDetailPage.css';
 const PLACEHOLDER_IMG = '/images/products/placeholder.svg';
 
 export function ProductDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [recommendations, setRecommendations] = useState<Product[]>([]);
@@ -55,7 +57,7 @@ export function ProductDetailPage() {
         <div className="container">
           <div className="product-detail-loading">
             <div className="spinner" />
-            <p>Loading product...</p>
+            <p>{t('order.loadingProduct')}</p>
           </div>
         </div>
       </main>
@@ -67,8 +69,8 @@ export function ProductDetailPage() {
       <main className="product-detail-page section">
         <div className="container">
           <div className="product-not-found">
-            <h2>Product not found</h2>
-            <Link to="/products" className="btn btn-primary">Back to Products</Link>
+            <h2>{t('order.productNotFound')}</h2>
+            <Link to="/products" className="btn btn-primary">{t('order.backToProducts')}</Link>
           </div>
         </div>
       </main>
@@ -107,7 +109,7 @@ export function ProductDetailPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            <span className="product-category">{product.category}</span>
+            <span className="product-category">{t(`categories.${product.category}`, product.category)}</span>
             <h1>{product.name}</h1>
             <div className="product-rating">
               {Array.from({ length: 5 }).map((_, i) => (
@@ -117,22 +119,22 @@ export function ProductDetailPage() {
                   size={18}
                 />
               ))}
-              <span className="rating-text">{rating} (12 reviews)</span>
+              <span className="rating-text">{rating} (12 {t('products.reviews')})</span>
             </div>
             <p className="product-price">${product.price.toFixed(2)}</p>
             <p className="product-description">{product.description}</p>
             {product.sku && (
-              <p className="product-sku">SKU: {product.sku}</p>
+              <p className="product-sku">{t('products.sku')}: {product.sku}</p>
             )}
             <p className="product-stock">
               {product.stockQuantity > 0
-                ? `In Stock (${product.stockQuantity} available)`
-                : 'Out of Stock'}
+                ? `${t('products.inStock')} (${product.stockQuantity})`
+                : t('products.outOfStock')}
             </p>
 
             <div className="product-actions">
               <div className="quantity-selector">
-                <label>Quantity</label>
+                <label>{t('products.quantity')}</label>
                 <div className="qty-controls">
                   <button
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -157,7 +159,7 @@ export function ProductDetailPage() {
                 whileTap={{ scale: 0.98 }}
               >
                 <FiShoppingCart size={20} />
-                Add to Cart
+                {t('products.addToCart')}
               </motion.button>
             </div>
           </motion.div>
@@ -165,7 +167,7 @@ export function ProductDetailPage() {
 
         {recommendations.length > 0 && (
           <section className="recommendations-section">
-            <h2>You might also like</h2>
+            <h2>{t('products.relatedProducts')}</h2>
             <div className="grid-products">
               {recommendations.map((rec) => (
                 <ProductCard key={rec.id} product={rec} />

@@ -53,7 +53,7 @@
 .product-name {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-navy);
+  color: var(--color-text);
   margin: 0;
   line-height: 1.4;
   display: -webkit-box;

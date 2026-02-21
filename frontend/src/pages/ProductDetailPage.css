@@ -55,7 +55,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-coral);
-  background: rgba(233, 69, 96, 0.1);
+  background: rgba(99, 44, 166, 0.1);
   border-radius: 4px;
   width: fit-content;
 }
@@ -63,7 +63,7 @@
 .product-detail-info h1 {
   font-size: 1.75rem;
   font-weight: 700;
-  color: var(--color-navy);
+  color: var(--color-text);
   margin: 0;
   line-height: 1.3;
 }
@@ -142,7 +142,7 @@
   justify-content: center;
   font-size: 1.25rem;
   font-weight: 600;
-  background: white;
+  background: var(--color-bg-card);
   border: none;
   color: var(--color-text);
   cursor: pointer;
@@ -186,6 +186,6 @@
 .recommendations-section h2 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-navy);
+  color: var(--color-text);
   margin: 0 0 1.5rem;
 }

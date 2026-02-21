@@ -1,16 +1,20 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FiShoppingBag, FiTwitter, FiInstagram, FiLinkedin } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 import './Footer.css';
 
-const categories = ['Electronics', 'Clothing', 'Home & Kitchen', 'Sports'];
-const quickLinks = [
-  { to: '/products', label: 'All Products' },
-  { to: '/checkout', label: 'Checkout' },
-  { to: '/login', label: 'Account' },
-];
+const categories = ['Electronics', 'Clothing', 'Home & Kitchen', 'Sports', 'Books', 'Beauty', 'Toys & Games'];
 
 export function Footer() {
+  const { t } = useTranslation();
+
+  const quickLinks = [
+    { to: '/products', label: t('footer.allProducts') },
+    { to: '/checkout', label: t('checkout.title') },
+    { to: '/login', label: t('nav.login') },
+  ];
+
   return (
     <footer className="footer">
       <div className="footer-inner container">
@@ -21,7 +25,7 @@ export function Footer() {
               <span>Kelvo E-Comm</span>
             </Link>
             <p className="footer-tagline">
-              Premium Products, Exceptional Experience. Your trusted destination for quality.
+              {t('footer.tagline')}
             </p>
             <div className="footer-datadog">
               <span className="datadog-badge">Monitored by Datadog</span>
@@ -29,7 +33,7 @@ export function Footer() {
           </div>
 
           <div className="footer-column">
-            <h4>Quick Links</h4>
+            <h4>{t('footer.quickLinks')}</h4>
             <ul>
               {quickLinks.map(({ to, label }) => (
                 <li key={to}>
@@ -40,12 +44,12 @@ export function Footer() {
           </div>
 
           <div className="footer-column">
-            <h4>Categories</h4>
+            <h4>{t('footer.categories')}</h4>
             <ul>
               {categories.map((cat) => (
                 <li key={cat}>
                   <Link to={`/products?category=${encodeURIComponent(cat)}`}>
-                    {cat}
+                    {t(`categories.${cat}`, cat)}
                   </Link>
                 </li>
               ))}
@@ -53,7 +57,7 @@ export function Footer() {
           </div>
 
           <div className="footer-column">
-            <h4>Connect</h4>
+            <h4>{t('footer.connect')}</h4>
             <div className="footer-social">
               <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
                 <FiTwitter size={20} />

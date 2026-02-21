@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import './LoginPage.css';
 
 export function LoginPage() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get('tab') === 'register' ? 'register' : 'login';
   const [tab, setTab] = useState<'login' | 'register'>(initialTab);
@@ -24,11 +26,11 @@ export function LoginPage() {
     setLoading(true);
     try {
       await login(loginForm.email, loginForm.password);
-      toast.success('Welcome back!');
+      toast.success(t('auth.welcomeBack'));
       window.DD_RUM?.addAction('auth_login_success');
       navigate('/');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Login failed');
+      toast.error(err instanceof Error ? err.message : t('errors.loginFailed'));
     } finally {
       setLoading(false);
     }
@@ -37,21 +39,21 @@ export function LoginPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (registerForm.password !== registerForm.confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error(t('auth.passwordMismatch'));
       return;
     }
     if (registerForm.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+      toast.error(t('auth.passwordMinLength'));
       return;
     }
     setLoading(true);
     try {
       await register(registerForm.email, registerForm.name, registerForm.password);
-      toast.success('Account created!');
+      toast.success(t('auth.accountCreated'));
       window.DD_RUM?.addAction('auth_register_success');
       navigate('/');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Registration failed');
+      toast.error(err instanceof Error ? err.message : t('errors.registerFailed'));
     } finally {
       setLoading(false);
     }
@@ -66,20 +68,20 @@ export function LoginPage() {
               className={`tab-btn ${tab === 'login' ? 'active' : ''}`}
               onClick={() => setTab('login')}
             >
-              Login
+              {t('auth.loginTitle')}
             </button>
             <button
               className={`tab-btn ${tab === 'register' ? 'active' : ''}`}
               onClick={() => setTab('register')}
             >
-              Register
+              {t('auth.registerTitle')}
             </button>
           </div>
 
           {tab === 'login' ? (
             <form onSubmit={handleLogin} className="login-form">
               <div className="form-group">
-                <label htmlFor="login-email">Email</label>
+                <label htmlFor="login-email">{t('auth.email')}</label>
                 <input
                   id="login-email"
                   type="email"
@@ -88,11 +90,11 @@ export function LoginPage() {
                   onChange={(e) =>
                     setLoginForm((f) => ({ ...f, email: e.target.value }))
                   }
-                  placeholder="you@example.com"
+                  placeholder={t('auth.emailPlaceholder')}
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="login-password">Password</label>
+                <label htmlFor="login-password">{t('auth.password')}</label>
                 <input
                   id="login-password"
                   type="password"
@@ -105,20 +107,20 @@ export function LoginPage() {
                 />
               </div>
               <p className="demo-hint">
-                Demo: try demo@kelvo-ecomm.com / password123
+                {t('auth.demoHint')}
               </p>
               <button
                 type="submit"
                 className="btn btn-primary full-width"
                 disabled={loading}
               >
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading ? t('auth.signingIn') : t('auth.signIn')}
               </button>
             </form>
           ) : (
             <form onSubmit={handleRegister} className="login-form">
               <div className="form-group">
-                <label htmlFor="reg-name">Name</label>
+                <label htmlFor="reg-name">{t('auth.name')}</label>
                 <input
                   id="reg-name"
                   type="text"
@@ -127,11 +129,11 @@ export function LoginPage() {
                   onChange={(e) =>
                     setRegisterForm((f) => ({ ...f, name: e.target.value }))
                   }
-                  placeholder="Your name"
+                  placeholder={t('auth.namePlaceholder')}
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="reg-email">Email</label>
+                <label htmlFor="reg-email">{t('auth.email')}</label>
                 <input
                   id="reg-email"
                   type="email"
@@ -140,11 +142,11 @@ export function LoginPage() {
                   onChange={(e) =>
                     setRegisterForm((f) => ({ ...f, email: e.target.value }))
                   }
-                  placeholder="you@example.com"
+                  placeholder={t('auth.emailPlaceholder')}
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="reg-password">Password</label>
+                <label htmlFor="reg-password">{t('auth.password')}</label>
                 <input
                   id="reg-password"
                   type="password"
@@ -153,11 +155,11 @@ export function LoginPage() {
                   onChange={(e) =>
                     setRegisterForm((f) => ({ ...f, password: e.target.value }))
                   }
-                  placeholder="Min 6 characters"
+                  placeholder={t('auth.passwordPlaceholder')}
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="reg-confirm">Confirm Password</label>
+                <label htmlFor="reg-confirm">{t('auth.confirmPassword')}</label>
                 <input
                   id="reg-confirm"
                   type="password"
@@ -177,7 +179,7 @@ export function LoginPage() {
                 className="btn btn-primary full-width"
                 disabled={loading}
               >
-                {loading ? 'Creating account...' : 'Create Account'}
+                {loading ? t('auth.creatingAccount') : t('auth.createAccount')}
               </button>
             </form>
           )}

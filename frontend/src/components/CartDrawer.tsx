@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiX, FiMinus, FiPlus, FiShoppingBag, FiTag } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext';
 import './CartDrawer.css';
 
 const PLACEHOLDER_IMG = '/images/products/placeholder.svg';
 
 export function CartDrawer() {
+  const { t } = useTranslation();
   const {
     items,
     totals,
@@ -51,7 +53,7 @@ export function CartDrawer() {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
           >
             <div className="cart-drawer-header">
-              <h2>Your Cart</h2>
+              <h2>{t('cart.title')}</h2>
               <button
                 className="icon-btn close-btn"
                 onClick={closeDrawer}
@@ -65,9 +67,9 @@ export function CartDrawer() {
               {items.length === 0 ? (
                 <div className="cart-empty">
                   <FiShoppingBag size={48} className="empty-icon" />
-                  <p>Your cart is empty</p>
+                  <p>{t('cart.empty')}</p>
                   <Link to="/products" className="btn btn-primary" onClick={closeDrawer}>
-                    Browse Products
+                    {t('cart.browse')}
                   </Link>
                 </div>
               ) : (
@@ -113,7 +115,7 @@ export function CartDrawer() {
                               className="remove-btn"
                               onClick={() => removeItem(item.productId)}
                             >
-                              Remove
+                              {t('cart.remove')}
                             </button>
                           </div>
                         </div>
@@ -135,7 +137,7 @@ export function CartDrawer() {
                         <input
                           type="text"
                           className="coupon-input"
-                          placeholder="Coupon code"
+                          placeholder={t('cart.couponPlaceholder')}
                           value={couponInput}
                           onChange={(e) => setCouponInput(e.target.value)}
                           onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
@@ -146,7 +148,7 @@ export function CartDrawer() {
                           onClick={handleApplyCoupon}
                           disabled={isLoading || !couponInput.trim()}
                         >
-                          Apply
+                          {t('cart.couponApply')}
                         </button>
                       </div>
                     )}
@@ -154,25 +156,25 @@ export function CartDrawer() {
 
                   <div className="cart-totals">
                     <div className="total-row">
-                      <span>Subtotal</span>
+                      <span>{t('cart.subtotal')}</span>
                       <span>${totals.subtotal.toFixed(2)}</span>
                     </div>
                     {(totals.discount ?? 0) > 0 && (
                       <div className="total-row total-row-discount">
-                        <span>Discount</span>
+                        <span>{t('cart.discount')}</span>
                         <span>-${(totals.discount ?? 0).toFixed(2)}</span>
                       </div>
                     )}
                     <div className="total-row">
-                      <span>Tax</span>
+                      <span>{t('cart.tax')}</span>
                       <span>${totals.tax.toFixed(2)}</span>
                     </div>
                     <div className="total-row">
-                      <span>Shipping</span>
-                      <span>{totals.shipping === 0 ? 'Free' : `$${totals.shipping.toFixed(2)}`}</span>
+                      <span>{t('cart.shipping')}</span>
+                      <span>{totals.shipping === 0 ? t('cart.shippingFree') : `$${totals.shipping.toFixed(2)}`}</span>
                     </div>
                     <div className="total-row total-row-final">
-                      <span>Total</span>
+                      <span>{t('cart.total')}</span>
                       <span>${totals.total.toFixed(2)}</span>
                     </div>
                   </div>
@@ -182,7 +184,7 @@ export function CartDrawer() {
                     className="btn btn-primary checkout-btn"
                     onClick={closeDrawer}
                   >
-                    Proceed to Checkout
+                    {t('cart.checkout')}
                   </Link>
                 </>
               )}

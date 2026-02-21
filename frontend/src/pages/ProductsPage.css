@@ -1,7 +1,7 @@
 .page-title {
   font-size: 2rem;
   font-weight: 800;
-  color: var(--color-navy);
+  color: var(--color-text);
   margin: 0 0 1.5rem;
 }
 
@@ -25,7 +25,7 @@
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--color-text);
-  background: white;
+  background: var(--color-bg-card);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-md);
   cursor: pointer;

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiTag, FiX } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -15,6 +16,7 @@ import './CheckoutPage.css';
 const PLACEHOLDER_IMG = '/images/products/placeholder.svg';
 
 export function CheckoutPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { items, totals, coupon, sessionId, clearCart, applyCoupon, removeCoupon, isLoading } = useCart();
   const { user } = useAuth();
@@ -36,7 +38,7 @@ export function CheckoutPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (items.length === 0) {
-      setErrorMsg('Your cart is empty');
+      setErrorMsg(t('checkout.emptyCart'));
       return;
     }
 
@@ -89,7 +91,7 @@ export function CheckoutPage() {
       window.DD_RUM?.stopSession();
       navigate(`/order-confirmation/${order.id}`);
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Checkout failed');
+      setErrorMsg(err instanceof Error ? err.message : t('errors.checkoutFailed'));
       setStep('error');
       window.DD_RUM?.addError(err instanceof Error ? err : new Error('Checkout failed'), {
         source: 'custom',
@@ -103,10 +105,10 @@ export function CheckoutPage() {
       <main className="checkout-page section">
         <div className="container">
           <div className="checkout-empty">
-            <h2>Your cart is empty</h2>
-            <p>Add some products before checkout.</p>
+            <h2>{t('checkout.emptyCart')}</h2>
+            <p>{t('checkout.emptyCartHint')}</p>
             <button onClick={() => navigate('/products')} className="btn btn-primary">
-              Browse Products
+              {t('cart.browse')}
             </button>
           </div>
         </div>
@@ -120,8 +122,8 @@ export function CheckoutPage() {
         <div className="container">
           <div className="checkout-processing">
             <div className="spinner" />
-            <h2>Processing your order...</h2>
-            <p>Please wait while we complete your purchase.</p>
+            <h2>{t('checkout.processing')}</h2>
+            <p>{t('checkout.processingWait')}</p>
           </div>
         </div>
       </main>
@@ -134,10 +136,10 @@ export function CheckoutPage() {
         <div className="container">
           <div className="checkout-success">
             <div className="success-icon">✓</div>
-            <h2>Order Placed Successfully!</h2>
-            <p>Order #{orderId}</p>
+            <h2>{t('checkout.success')}</h2>
+            <p>{t('order.orderNumber', { id: orderId })}</p>
             <button onClick={() => navigate('/products')} className="btn btn-primary">
-              Continue Shopping
+              {t('checkout.continueShopping')}
             </button>
           </div>
         </div>
@@ -148,23 +150,23 @@ export function CheckoutPage() {
   return (
     <main className="checkout-page section">
       <div className="container">
-        <h1 className="page-title">Checkout</h1>
+        <h1 className="page-title">{t('checkout.title')}</h1>
 
         {step === 'error' && errorMsg && (
           <div className="checkout-error">
             <p>{errorMsg}</p>
             <button onClick={() => setStep('form')} className="btn btn-outline">
-              Try Again
+              {t('checkout.tryAgain')}
             </button>
           </div>
         )}
 
         <form className="checkout-layout" onSubmit={handleSubmit}>
           <div className="checkout-form-section">
-            <h2>Shipping Information</h2>
+            <h2>{t('checkout.shippingInfo')}</h2>
             <div className="form-grid">
               <div className="form-group">
-                <label htmlFor="name">Full Name</label>
+                <label htmlFor="name">{t('checkout.fullName')}</label>
                 <input
                   id="name"
                   type="text"
@@ -174,7 +176,7 @@ export function CheckoutPage() {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="email">Email</label>
+                <label htmlFor="email">{t('checkout.email')}</label>
                 <input
                   id="email"
                   type="email"
@@ -184,7 +186,7 @@ export function CheckoutPage() {
                 />
               </div>
               <div className="form-group full-width">
-                <label htmlFor="address">Address</label>
+                <label htmlFor="address">{t('checkout.address')}</label>
                 <input
                   id="address"
                   type="text"
@@ -193,7 +195,7 @@ export function CheckoutPage() {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="city">City</label>
+                <label htmlFor="city">{t('checkout.city')}</label>
                 <input
                   id="city"
                   type="text"
@@ -202,7 +204,7 @@ export function CheckoutPage() {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="zip">ZIP Code</label>
+                <label htmlFor="zip">{t('checkout.zip')}</label>
                 <input
                   id="zip"
                   type="text"
@@ -212,9 +214,9 @@ export function CheckoutPage() {
               </div>
             </div>
 
-            <h2>Payment</h2>
+            <h2>{t('checkout.payment')}</h2>
             <div className="form-group">
-              <label>Card Number</label>
+              <label>{t('checkout.cardNumber')}</label>
               <input
                 type="text"
                 value={form.cardNumber}
@@ -224,7 +226,7 @@ export function CheckoutPage() {
             </div>
             <div className="form-row">
               <div className="form-group">
-                <label>Expiry</label>
+                <label>{t('checkout.expiry')}</label>
                 <input
                   type="text"
                   value={form.exp}
@@ -233,7 +235,7 @@ export function CheckoutPage() {
                 />
               </div>
               <div className="form-group">
-                <label>CVC</label>
+                <label>{t('checkout.cvc')}</label>
                 <input
                   type="text"
                   value={form.cvc}
@@ -246,7 +248,7 @@ export function CheckoutPage() {
 
           <div className="checkout-summary">
             <div className="summary-card">
-              <h2>Order Summary</h2>
+              <h2>{t('checkout.orderSummary')}</h2>
               <ul className="summary-items">
                 {items.map((item) => (
                   <li key={item.productId} className="summary-item">
@@ -280,7 +282,7 @@ export function CheckoutPage() {
                     <input
                       type="text"
                       className="coupon-input"
-                      placeholder="Coupon code"
+                      placeholder={t('cart.couponPlaceholder')}
                       value={couponInput}
                       onChange={(e) => setCouponInput(e.target.value)}
                       onKeyDown={(e) => {
@@ -298,23 +300,23 @@ export function CheckoutPage() {
                       onClick={() => { if (couponInput.trim()) applyCoupon(couponInput.trim()); setCouponInput(''); }}
                       disabled={isLoading || !couponInput.trim()}
                     >
-                      Apply
+                      {t('cart.couponApply')}
                     </button>
                   </div>
                 )}
               </div>
 
               <div className="summary-totals">
-                <div><span>Subtotal</span><span>${totals.subtotal.toFixed(2)}</span></div>
+                <div><span>{t('cart.subtotal')}</span><span>${totals.subtotal.toFixed(2)}</span></div>
                 {(totals.discount ?? 0) > 0 && (
-                  <div className="discount-row"><span>Discount</span><span>-${(totals.discount ?? 0).toFixed(2)}</span></div>
+                  <div className="discount-row"><span>{t('cart.discount')}</span><span>-${(totals.discount ?? 0).toFixed(2)}</span></div>
                 )}
-                <div><span>Tax</span><span>${totals.tax.toFixed(2)}</span></div>
-                <div><span>Shipping</span><span>{totals.shipping === 0 ? 'Free' : `$${totals.shipping.toFixed(2)}`}</span></div>
-                <div className="total-row"><span>Total</span><span>${totals.total.toFixed(2)}</span></div>
+                <div><span>{t('cart.tax')}</span><span>${totals.tax.toFixed(2)}</span></div>
+                <div><span>{t('cart.shipping')}</span><span>{totals.shipping === 0 ? t('cart.shippingFree') : `$${totals.shipping.toFixed(2)}`}</span></div>
+                <div className="total-row"><span>{t('cart.total')}</span><span>${totals.total.toFixed(2)}</span></div>
               </div>
               <button type="submit" className="btn btn-primary place-order-btn">
-                Place Order
+                {t('checkout.placeOrder')}
               </button>
             </div>
           </div>

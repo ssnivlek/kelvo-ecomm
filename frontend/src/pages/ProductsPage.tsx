@@ -1,17 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ProductCard } from '../components/ProductCard';
 import { fetchProducts } from '../services/api';
 import { Product } from '../types';
 import './ProductsPage.css';
 
-const CATEGORIES = ['All', 'Electronics', 'Clothing', 'Home & Kitchen', 'Sports'];
-const SORT_OPTIONS = [
-  { value: 'default', label: 'Default' },
-  { value: 'price_asc', label: 'Price: Low to High' },
-  { value: 'price_desc', label: 'Price: High to Low' },
-  { value: 'name', label: 'Name A-Z' },
-];
+const CATEGORIES = ['All', 'Electronics', 'Clothing', 'Home & Kitchen', 'Sports', 'Books', 'Beauty', 'Toys & Games'];
 
 function ProductSkeleton() {
   return (
@@ -27,6 +22,7 @@ function ProductSkeleton() {
 }
 
 export function ProductsPage() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get('category');
   const [products, setProducts] = useState<Product[]>([]);
@@ -54,10 +50,17 @@ export function ProductsPage() {
       .finally(() => setLoading(false));
   }, [category, sort]);
 
+  const SORT_OPTIONS = [
+    { value: 'default', label: t('search.default') },
+    { value: 'price_asc', label: t('search.priceLowHigh') },
+    { value: 'price_desc', label: t('search.priceHighLow') },
+    { value: 'name', label: t('search.nameAZ') },
+  ];
+
   return (
     <main className="products-page section">
       <div className="container">
-        <h1 className="page-title">Products</h1>
+        <h1 className="page-title">{t('products.title')}</h1>
 
         <div className="products-controls">
           <div className="category-buttons">
@@ -67,12 +70,12 @@ export function ProductsPage() {
                 className={`cat-btn ${category === cat || (!category && cat === 'All') ? 'active' : ''}`}
                 onClick={() => setCategory(cat === 'All' ? undefined : cat)}
               >
-                {cat}
+                {cat === 'All' ? t('products.allCategories') : t(`categories.${cat}`, cat)}
               </button>
             ))}
           </div>
           <div className="sort-control">
-            <label htmlFor="sort">Sort by</label>
+            <label htmlFor="sort">{t('search.sortBy')}</label>
             <select
               id="sort"
               value={sort}
@@ -103,7 +106,7 @@ export function ProductsPage() {
 
         {!loading && products.length === 0 && (
           <div className="products-empty">
-            <p>No products found in this category.</p>
+            <p>{t('search.noProductsCategory')}</p>
           </div>
         )}
       </div>

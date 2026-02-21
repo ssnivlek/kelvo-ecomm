@@ -50,7 +50,7 @@
 
 .categories-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 1.5rem;
 }
 
@@ -103,7 +103,7 @@
 .feature-card {
   text-align: center;
   padding: 2rem 1.5rem;
-  background: white;
+  background: var(--color-bg-card);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   transition: box-shadow 0.2s;
@@ -120,7 +120,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--color-coral) 0%, #ff6b6b 100%);
+  background: linear-gradient(135deg, var(--color-coral) 0%, #7C3AED 100%);
   color: white;
   border-radius: var(--radius-md);
 }
@@ -128,7 +128,7 @@
 .feature-card h3 {
   font-size: 1.0625rem;
   font-weight: 600;
-  color: var(--color-navy);
+  color: var(--color-text);
   margin: 0 0 0.5rem;
 }
 
@@ -139,7 +139,7 @@
 }
 
 .newsletter-section {
-  background: linear-gradient(135deg, var(--color-navy) 0%, var(--color-teal) 100%);
+  background: linear-gradient(135deg, #23263B 0%, #4F2196 100%);
   color: white;
 }
 

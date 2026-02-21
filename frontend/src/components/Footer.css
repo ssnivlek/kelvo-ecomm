@@ -1,8 +1,12 @@
 .footer {
   margin-top: auto;
-  background: var(--color-navy);
+  background: #23263B;
   color: rgba(255, 255, 255, 0.9);
   padding: 3rem 0 1.5rem;
+}
+
+[data-theme="dark"] .footer {
+  background: #171929;
 }
 
 .footer-inner {
@@ -61,7 +65,7 @@
   padding: 0.35rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-navy);
+  color: #23263B;
   background: rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-sm);
 }

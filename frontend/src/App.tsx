@@ -4,6 +4,7 @@ import './App.css';
 import { Toaster } from 'react-hot-toast';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { CartDrawer } from './components/CartDrawer';
@@ -17,6 +18,7 @@ import { SearchResults } from './components/SearchResults';
 
 function App() {
   return (
+    <ThemeProvider>
     <AuthProvider>
       <CartProvider>
         <div className="app">
@@ -47,6 +49,7 @@ function App() {
         />
       </CartProvider>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
 

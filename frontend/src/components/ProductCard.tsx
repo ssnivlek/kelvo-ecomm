@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiShoppingCart, FiStar } from 'react-icons/fi';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import './ProductCard.css';
@@ -14,6 +15,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, showRating = true }: ProductCardProps) {
+  const { t } = useTranslation();
   const [imgError, setImgError] = useState(false);
   const { addItem } = useCart();
 
@@ -58,7 +60,7 @@ export function ProductCard({ product, showRating = true }: ProductCardProps) {
             alt={product.name}
             onError={() => setImgError(true)}
           />
-          <span className="category-badge">{product.category}</span>
+          <span className="category-badge">{t(`categories.${product.category}`, product.category)}</span>
         </div>
         <div className="product-card-content">
           <h3 className="product-name">{product.name}</h3>
@@ -82,7 +84,7 @@ export function ProductCard({ product, showRating = true }: ProductCardProps) {
             whileTap={{ scale: 0.98 }}
           >
             <FiShoppingCart size={16} />
-            Add to Cart
+            {t('products.addToCart')}
           </motion.button>
         </div>
       </Link>

@@ -15,7 +15,7 @@
   gap: 0.5rem;
   font-size: 1.5rem;
   font-weight: 800;
-  color: var(--color-navy);
+  color: var(--color-text);
   text-decoration: none;
   transition: color 0.2s;
 }
@@ -46,7 +46,7 @@
 
 .nav-link:hover {
   color: var(--color-coral);
-  background: rgba(233, 69, 96, 0.08);
+  background: rgba(99, 44, 166, 0.08);
 }
 
 .nav-dropdown-trigger {
@@ -60,7 +60,7 @@
   margin-top: 0.25rem;
   min-width: 180px;
   padding: 0.5rem;
-  background: white;
+  background: var(--color-bg-card);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   opacity: 0;
@@ -101,7 +101,7 @@
 }
 
 .dropdown-item:hover {
-  background: rgba(233, 69, 96, 0.08);
+  background: rgba(99, 44, 166, 0.08);
   color: var(--color-coral);
 }
 
@@ -173,11 +173,49 @@
 
 .icon-btn:hover {
   color: var(--color-coral);
-  background: rgba(233, 69, 96, 0.08);
+  background: rgba(99, 44, 166, 0.08);
 }
 
 .cart-btn {
   margin-right: 0.25rem;
+}
+
+.lang-menu-wrapper {
+  position: relative;
+}
+
+.lang-btn {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.lang-flag {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.lang-dropdown {
+  right: 0;
+  left: auto;
+  min-width: 160px;
+}
+
+.lang-item {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lang-item.active {
+  background: rgba(99, 44, 166, 0.08);
+  color: var(--color-coral);
+  font-weight: 600;
+}
+
+.theme-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .user-menu-wrapper {
@@ -205,7 +243,7 @@
     display: flex;
     flex-direction: column;
     padding: 1rem 1.5rem;
-    background: white;
+    background: var(--color-bg-card);
     border-top: 1px solid var(--color-border);
     gap: 0.5rem;
   }

@@ -42,7 +42,7 @@
 .confirmation-card h1 {
   font-size: 1.75rem;
   font-weight: 700;
-  color: var(--color-navy);
+  color: var(--color-text);
   margin: 0 0 0.5rem;
 }
 
@@ -62,7 +62,7 @@
 .order-number {
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--color-navy);
+  color: var(--color-text);
   margin: 0 0 0.25rem;
 }
 
