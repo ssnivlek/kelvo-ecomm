@@ -11,6 +11,7 @@ COPY auth/ auth/
 
 COPY <<'RUNNER' server.js
 const http = require('http');
+const logger = require('./shared/logger');
 const { handler } = require('./auth/handler');
 const { initDb } = require('./shared/postgres');
 
@@ -74,7 +75,7 @@ const server = http.createServer(async (req, res) => {
 
 async function start() {
   await initDb();
-  server.listen(PORT, () => console.log(`Auth service running on port ${PORT}`));
+  server.listen(PORT, () => logger.info(`Auth service running on port ${PORT}`));
 }
 start();
 RUNNER

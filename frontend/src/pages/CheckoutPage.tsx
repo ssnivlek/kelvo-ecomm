@@ -44,7 +44,7 @@ export function CheckoutPage() {
 
     setStep('processing');
     setErrorMsg('');
-    window.DD_RUM?.addAction('checkout_start');
+    window.DD_RUM?.addAction?.('checkout_start');
 
     try {
       const orderData: CreateOrderRequest = {
@@ -59,7 +59,7 @@ export function CheckoutPage() {
 
       const order = await createOrder(orderData, totals.total);
       setOrderId(order.id);
-      window.DD_RUM?.addAction('checkout_order_created', { orderId: order.id });
+      window.DD_RUM?.addAction?.('checkout_order_created', { orderId: order.id });
 
       const { paymentIntentId } = await createPaymentIntent(
         totals.total,
@@ -67,10 +67,10 @@ export function CheckoutPage() {
         form.email,
         String(order.id)
       );
-      window.DD_RUM?.addAction('checkout_payment_intent_created');
+      window.DD_RUM?.addAction?.('checkout_payment_intent_created');
 
       await confirmPayment(paymentIntentId);
-      window.DD_RUM?.addAction('checkout_payment_confirmed');
+      window.DD_RUM?.addAction?.('checkout_payment_confirmed');
 
       sendOrderConfirmation({
         orderId: order.id,
@@ -86,14 +86,14 @@ export function CheckoutPage() {
 
       await clearCart();
       setStep('success');
-      window.DD_RUM?.addAction('checkout_complete', { orderId: order.id });
-      window.DD_RUM?.addAction('session_end', { reason: 'checkout_completed', orderId: order.id });
-      window.DD_RUM?.stopSession();
+      window.DD_RUM?.addAction?.('checkout_complete', { orderId: order.id });
+      window.DD_RUM?.addAction?.('session_end', { reason: 'checkout_completed', orderId: order.id });
+      window.DD_RUM?.stopSession?.();
       navigate(`/order-confirmation/${order.id}`);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : t('errors.checkoutFailed'));
       setStep('error');
-      window.DD_RUM?.addError(err instanceof Error ? err : new Error('Checkout failed'), {
+      window.DD_RUM?.addError?.(err instanceof Error ? err : new Error('Checkout failed'), {
         source: 'custom',
         context: { step: 'checkout', itemCount: items.length, total: totals.total },
       });

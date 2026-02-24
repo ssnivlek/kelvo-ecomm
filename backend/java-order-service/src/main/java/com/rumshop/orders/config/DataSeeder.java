@@ -221,7 +221,11 @@ public class DataSeeder implements CommandLineRunner {
                 createProduct("Plush Toy Bear",
                         "Soft plush teddy bear, 12 inches",
                         new BigDecimal("24.99"), "plush-toy-bear", "Toys & Games", 95, "TOYS-006",
-                        "/images/products/plush-toy-bear.svg")
+                        "/images/products/plush-toy-bear.svg"),
+                createProduct("Albertxidil Hair Growth Serum",
+                        "Revolutionary hair and beard growth formula. Grow a magnificent mane and a legendary beard in weeks. Clinically tested, Albert-approved.",
+                        new BigDecimal("49.99"), "albertxidil", "Beauty", 200, "BEAU-007",
+                        "/images/products/albertxidil.svg")
         );
 
         productRepository.saveAll(products);

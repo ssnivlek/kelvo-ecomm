@@ -39,7 +39,7 @@ export async function changeLanguageSafe(lng: string): Promise<boolean> {
   if (lng === 'ru' && !russianFailedOnce && !sessionStorage.getItem(RU_SESSION_KEY)) {
     russianFailedOnce = true;
     const err = new Error('Translation load timeout: ru');
-    (window as any).DD_RUM?.addError(err, {
+    (window as any).DD_RUM?.addError?.(err, {
       source: 'custom',
       context: { language: 'ru', attempt: 1 },
     });

@@ -27,7 +27,7 @@ export function LoginPage() {
     try {
       await login(loginForm.email, loginForm.password);
       toast.success(t('auth.welcomeBack'));
-      window.DD_RUM?.addAction('auth_login_success');
+      window.DD_RUM?.addAction?.('auth_login_success');
       navigate('/');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('errors.loginFailed'));
@@ -50,7 +50,7 @@ export function LoginPage() {
     try {
       await register(registerForm.email, registerForm.name, registerForm.password);
       toast.success(t('auth.accountCreated'));
-      window.DD_RUM?.addAction('auth_register_success');
+      window.DD_RUM?.addAction?.('auth_register_success');
       navigate('/');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('errors.registerFailed'));

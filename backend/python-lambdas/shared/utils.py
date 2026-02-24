@@ -640,4 +640,15 @@ PRODUCTS: list[dict[str, Any]] = [
         "sku": "TOYS-006",
         "slug": "plush-toy-bear",
     },
+    {
+        "id": 51,
+        "name": "Albertxidil Hair Growth Serum",
+        "description": "Revolutionary hair and beard growth formula. Grow a magnificent mane and a legendary beard in weeks. Clinically tested, Albert-approved.",
+        "price": 49.99,
+        "imageUrl": "/images/products/albertxidil.svg",
+        "category": "Beauty",
+        "stockQuantity": 200,
+        "sku": "BEAU-007",
+        "slug": "albertxidil",
+    },
 ]

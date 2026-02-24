@@ -32,6 +32,8 @@ management:
       enabled: true
 
 # Datadog APM configuration (used when dd-java-agent is attached)
+# JSON logging via logstash-logback-encoder (logback-spring.xml)
+# dd-java-agent with DD_LOGS_INJECTION=true auto-injects trace context into MDC
 dd:
   service: kelvo-ecomm-order-service
   env: production

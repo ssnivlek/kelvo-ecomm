@@ -14,18 +14,17 @@ import os, sys, json, logging
 sys.path.insert(0, '/app')
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from pythonjsonlogger import jsonlogger
 from notifications.handler import _handler
 
-logging.basicConfig(level=logging.INFO, format='%(message)s')
-for h in logging.root.handlers:
-    h.setFormatter(type('JSONFmt', (logging.Formatter,), {
-        'format': lambda self, r: json.dumps({
-            'timestamp': self.formatTime(r), 'level': r.levelname,
-            'logger': r.name, 'message': r.getMessage(),
-            'service': 'kelvo-ecomm-notifications',
-            **({'error': str(r.exc_info[1])} if r.exc_info and r.exc_info[1] else {}),
-        })
-    })())
+handler = logging.StreamHandler()
+handler.setFormatter(jsonlogger.JsonFormatter(
+    fmt='%(asctime)s %(levelname)s %(name)s %(message)s',
+    rename_fields={'asctime': 'timestamp', 'levelname': 'level', 'name': 'logger'},
+    static_fields={'service': 'kelvo-ecomm-notifications'}
+))
+logging.root.handlers = [handler]
+logging.root.setLevel(logging.INFO)
 
 app = Flask(__name__)
 CORS(app)

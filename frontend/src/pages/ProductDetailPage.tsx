@@ -37,7 +37,7 @@ export function ProductDetailPage() {
         setProduct(p || null);
         setRecommendations(recs || []);
         if (p) {
-          window.DD_RUM?.addAction('product_view', {
+          window.DD_RUM?.addAction?.('product_view', {
             productId: p.id,
             productName: p.name,
           });

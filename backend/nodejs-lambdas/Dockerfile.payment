@@ -11,6 +11,7 @@ COPY payment/ payment/
 
 COPY <<'RUNNER' server.js
 const http = require('http');
+const logger = require('./shared/logger');
 const { handler } = require('./payment/handler');
 
 const PORT = process.env.PORT || 3003;
@@ -68,7 +69,7 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => console.log(`Payment service running on port ${PORT}`));
+server.listen(PORT, () => logger.info(`Payment service running on port ${PORT}`));
 RUNNER
 
 EXPOSE 3003

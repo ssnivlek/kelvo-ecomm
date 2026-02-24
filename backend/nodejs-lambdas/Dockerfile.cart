@@ -11,6 +11,7 @@ COPY cart/ cart/
 
 COPY <<'RUNNER' server.js
 const http = require('http');
+const logger = require('./shared/logger');
 const { handler } = require('./cart/handler');
 
 const PORT = process.env.PORT || 3001;
@@ -103,7 +104,7 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => console.log(`Cart service running on port ${PORT}`));
+server.listen(PORT, () => logger.info(`Cart service running on port ${PORT}`));
 RUNNER
 
 EXPOSE 3001

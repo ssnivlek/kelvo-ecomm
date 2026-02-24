@@ -4,6 +4,7 @@
  */
 
 const tracer = require('../shared/tracer');
+const logger = require('../shared/logger');
 const { v4: uuidv4 } = require('uuid');
 const { success, error, created, CORS_HEADERS } = require('../shared/responses');
 const { getPaymentIntent, savePaymentIntent } = require('../shared/redis');
@@ -99,10 +100,9 @@ function handleWebhook(body) {
   const eventType = body?.type || 'unknown';
   const eventId = body?.id || uuidv4();
 
-  console.log('[Payment Webhook]', {
+  logger.info('[Payment Webhook]', {
     eventId,
     type: eventType,
-    timestamp: new Date().toISOString(),
     payload: JSON.stringify(body).slice(0, 500),
   });
 
@@ -132,7 +132,7 @@ async function handleValidateCoupon(body) {
     };
 
     if (code === 'BLACKFRIDAY') {
-      console.error('[PAYMENT] Coupon store failure: Redis connection timeout at coupon-store.internal:6380, pool exhausted after 3 retries', {
+      logger.error('[PAYMENT] Coupon store failure: Redis connection timeout at coupon-store.internal:6380, pool exhausted after 3 retries', {
         couponCode: code, upstream: 'coupon-store.internal:6380', retries: 3,
       });
       if (span) {
@@ -169,7 +169,7 @@ async function handler(event, context) {
 
     return error('Not Found', 404);
   } catch (err) {
-    console.error('Payment handler error:', err);
+    logger.error('Payment handler error', { error: err.message, stack: err.stack });
     return error(err.message || 'Internal server error', 500);
   }
 }

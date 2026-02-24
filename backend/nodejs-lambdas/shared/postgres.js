@@ -6,6 +6,7 @@
 
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
+const logger = require('./logger');
 
 const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://rumshop:rumshop@localhost:5432/rumshop';
 
@@ -16,7 +17,7 @@ const pool = new Pool({
   connectionTimeoutMillis: 5000,
 });
 
-pool.on('error', (err) => console.error('[PostgreSQL] Pool error:', err.message));
+pool.on('error', (err) => logger.error('[PostgreSQL] Pool error', { error: err.message }));
 
 /**
  * Initialize users table and seed demo user.
@@ -44,13 +45,13 @@ async function initDb(retries = 15) {
           'INSERT INTO users (email, name, password_hash) VALUES ($1, $2, $3)',
           ['demo@kelvo-ecomm.com', 'Demo User', hash]
         );
-        console.log('[PostgreSQL] Demo user seeded (demo@kelvo-ecomm.com / password123)');
+        logger.info('[PostgreSQL] Demo user seeded (demo@kelvo-ecomm.com / password123)');
       }
 
-      console.log('[PostgreSQL] Connected and initialized');
+      logger.info('[PostgreSQL] Connected and initialized');
       return;
     } catch (err) {
-      console.log(`[PostgreSQL] Waiting for database... (${i + 1}/${retries})`);
+      logger.info(`[PostgreSQL] Waiting for database... (${i + 1}/${retries})`);
       await new Promise((r) => setTimeout(r, 2000));
     }
   }

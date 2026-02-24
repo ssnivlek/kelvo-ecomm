@@ -128,7 +128,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           isDrawerOpen: true,
         }));
         toast.success(`Added ${product.name} to cart`);
-        window.DD_RUM?.addAction('cart_add', {
+        window.DD_RUM?.addAction?.('cart_add', {
           productId: product.id,
           productName: product.name,
           quantity,
@@ -136,7 +136,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       } catch (err) {
         toast.error(err instanceof Error ? err.message : 'Error adding item');
         setState((s) => ({ ...s, isLoading: false }));
-        window.DD_RUM?.addError(err instanceof Error ? err : new Error('Error adding item'), {
+        window.DD_RUM?.addError?.(err instanceof Error ? err : new Error('Error adding item'), {
           source: 'custom',
           context: { productId: product.id, productName: product.name, quantity },
         });
@@ -157,14 +157,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           isLoading: false,
         }));
         toast.success('Item removed from cart');
-        window.DD_RUM?.addAction('cart_remove', { productId });
+        window.DD_RUM?.addAction?.('cart_remove', { productId });
       } catch {
         setState((s) => {
           const items = s.items.filter((i) => String(i.productId) !== String(productId));
           return { ...s, items, totals: calculateTotals(items), isLoading: false };
         });
         toast.success('Item removed from cart');
-        window.DD_RUM?.addAction('cart_remove', { productId });
+        window.DD_RUM?.addAction?.('cart_remove', { productId });
       }
     },
     [sessionId]
@@ -182,11 +182,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           totals: applyServerTotals(res),
           isLoading: false,
         }));
-        window.DD_RUM?.addAction('cart_update', { productId, quantity });
+        window.DD_RUM?.addAction?.('cart_update', { productId, quantity });
       } catch (err) {
         toast.error(err instanceof Error ? err.message : 'Error updating item');
         setState((s) => ({ ...s, isLoading: false }));
-        window.DD_RUM?.addError(err instanceof Error ? err : new Error('Error updating item'), {
+        window.DD_RUM?.addError?.(err instanceof Error ? err : new Error('Error updating item'), {
           source: 'custom',
           context: { productId, quantity },
         });
@@ -208,7 +208,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       isDrawerOpen: false,
     });
     toast.success('Cart cleared');
-    window.DD_RUM?.addAction('cart_clear');
+    window.DD_RUM?.addAction?.('cart_clear');
   }, [sessionId]);
 
   const applyCoupon = useCallback(async (code: string) => {
@@ -223,11 +223,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         isLoading: false,
       }));
       toast.success(res.message || 'Coupon applied');
-      window.DD_RUM?.addAction('coupon_apply', { code: code.toUpperCase(), success: true });
+      window.DD_RUM?.addAction?.('coupon_apply', { code: code.toUpperCase(), success: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not apply coupon code');
       setState((s) => ({ ...s, isLoading: false }));
-      window.DD_RUM?.addError(err instanceof Error ? err : new Error('Could not apply coupon code'), {
+      window.DD_RUM?.addError?.(err instanceof Error ? err : new Error('Could not apply coupon code'), {
         source: 'custom',
         context: { couponCode: code.toUpperCase() },
       });
@@ -246,7 +246,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         isLoading: false,
       }));
       toast.success('Coupon removed');
-      window.DD_RUM?.addAction('coupon_remove');
+      window.DD_RUM?.addAction?.('coupon_remove');
     } catch {
       setState((s) => ({ ...s, coupon: null, isLoading: false }));
     }

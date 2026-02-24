@@ -24,7 +24,7 @@ export function HomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    window.DD_RUM?.addAction('page_view', { page: 'home' });
+    window.DD_RUM?.addAction?.('page_view', { page: 'home' });
   }, []);
 
   useEffect(() => {
@@ -125,7 +125,7 @@ export function HomePage() {
               className="newsletter-form"
               onSubmit={(e) => {
                 e.preventDefault();
-                window.DD_RUM?.addAction('newsletter_signup');
+                window.DD_RUM?.addAction?.('newsletter_signup');
               }}
             >
               <input

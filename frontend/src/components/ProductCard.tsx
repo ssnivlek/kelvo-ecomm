@@ -31,7 +31,7 @@ export function ProductCard({ product, showRating = true }: ProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     addItem(product);
-    window.DD_RUM?.addAction('product_card_view', {
+    window.DD_RUM?.addAction?.('product_card_view', {
       productId: product.id,
       productName: product.name,
       action: 'add_to_cart',
@@ -39,7 +39,7 @@ export function ProductCard({ product, showRating = true }: ProductCardProps) {
   };
 
   const handleView = () => {
-    window.DD_RUM?.addAction('product_card_view', {
+    window.DD_RUM?.addAction?.('product_card_view', {
       productId: product.id,
       productName: product.name,
     });

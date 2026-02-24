@@ -4,6 +4,7 @@
  */
 
 const tracer = require('../shared/tracer');
+const logger = require('../shared/logger');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const net = require('net');
@@ -16,7 +17,7 @@ const SMTP_PORT = parseInt(process.env.SMTP_PORT || '1025', 10);
 const SMTP_FROM = process.env.SMTP_FROM || 'noreply@kelvo-ecomm.com';
 
 if (JWT_SECRET === 'kelvo-ecomm-secret-key-2024') {
-  console.warn('[AUTH] WARNING: Using default JWT_SECRET — set a custom JWT_SECRET env var in production');
+  logger.warn('[AUTH] WARNING: Using default JWT_SECRET — set a custom JWT_SECRET env var in production');
 }
 const JWT_EXPIRY = '24h';
 
@@ -66,7 +67,7 @@ function sendSmtpEmail(to, subject, html) {
     });
     socket.on('end', () => resolve(true));
     socket.on('error', (err) => {
-      console.error('[AUTH] SMTP error:', err.message);
+      logger.error('[AUTH] SMTP error', { error: err.message });
       resolve(false);
     });
     socket.setTimeout(5000, () => { socket.destroy(); resolve(false); });
@@ -199,7 +200,7 @@ async function handler(event, context) {
 
     return error('Not Found', 404);
   } catch (err) {
-    console.error('Auth handler error:', err);
+    logger.error('Auth handler error', { error: err.message, stack: err.stack });
     return error(err.message || 'Internal server error', 500);
   }
 }

@@ -5,6 +5,7 @@
  */
 
 const Redis = require('ioredis');
+const logger = require('./logger');
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 
@@ -17,8 +18,8 @@ function getClient() {
       maxRetriesPerRequest: 3,
       lazyConnect: false,
     });
-    client.on('error', (err) => console.error('[Redis] Error:', err.message));
-    client.on('connect', () => console.log('[Redis] Connected'));
+    client.on('error', (err) => logger.error('[Redis] Error', { error: err.message }));
+    client.on('connect', () => logger.info('[Redis] Connected'));
   }
   return client;
 }

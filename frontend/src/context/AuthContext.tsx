@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(t);
     setUser(u);
     rumSetUser({ id: u.email, email: u.email, name: u.name });
-    window.DD_RUM?.addAction('auth_login', { email: u.email });
+    window.DD_RUM?.addAction?.('auth_login', { email: u.email });
   }, []);
 
   const register = useCallback(async (email: string, name: string, password: string) => {
@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(t);
     setUser(u);
     rumSetUser({ id: u.email, email: u.email, name: u.name });
-    window.DD_RUM?.addAction('auth_register', { email: u.email });
+    window.DD_RUM?.addAction?.('auth_register', { email: u.email });
   }, []);
 
   const logout = useCallback(() => {
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(null);
     setUser(null);
     rumClearUser();
-    window.DD_RUM?.addAction('auth_logout');
+    window.DD_RUM?.addAction?.('auth_logout');
   }, []);
 
   const value: AuthContextValue = {

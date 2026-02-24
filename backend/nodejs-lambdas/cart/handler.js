@@ -4,6 +4,7 @@
  */
 
 const tracer = require('../shared/tracer');
+const logger = require('../shared/logger');
 const http = require('http');
 const { success, error, CORS_HEADERS } = require('../shared/responses');
 const { getCart, saveCart, deleteCart } = require('../shared/redis');
@@ -43,7 +44,7 @@ async function addItem(body) {
       const existing = cart.items.find((i) => i.productId === productId);
       const newQty = (existing ? existing.quantity : 0) + (quantity || 1);
       if (newQty > 2) {
-        console.error('[CART] Internal: inventory sync timeout for product 3, warehouse-api.internal unreachable', {
+        logger.error('[CART] Internal: inventory sync timeout for product 3, warehouse-api.internal unreachable', {
           productId, productName, requestedQty: newQty, upstream: 'warehouse-api.internal:8443',
         });
         if (span) {
@@ -106,7 +107,7 @@ async function updateItemQuantity(body) {
   }
 
   if (String(productId) === '3' && quantity > 2) {
-    console.error('[CART] Internal: inventory sync timeout for product 3 on update', { productId, quantity });
+    logger.error('[CART] Internal: inventory sync timeout for product 3 on update', { productId, quantity });
     return error('Error updating item', 500);
   }
 
@@ -223,7 +224,7 @@ async function applyCoupon(body) {
         message: `Coupon applied: ${cart.discountLabel}`,
       });
     } catch (err) {
-      console.error('[CART] Coupon validation call failed:', err.message);
+      logger.error('[CART] Coupon validation call failed', { error: err.message });
       if (span) {
         span.setTag('error', true);
         span.setTag('error.message', err.message);
@@ -271,7 +272,7 @@ async function handler(event, context) {
 
     return error('Not Found', 404);
   } catch (err) {
-    console.error('Cart handler error:', err);
+    logger.error('Cart handler error', { error: err.message, stack: err.stack });
     return error(err.message || 'Internal server error', 500);
   }
 }
