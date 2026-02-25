@@ -53,18 +53,18 @@
   <rect x="68" y="72" width="54" height="8" rx="3" fill="#2E7D32"/>
   <rect x="68" y="77" width="54" height="3" fill="#2E7D32"/>
   <!-- Brand name -->
-  <text x="95" y="93" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="9" font-weight="bold" fill="#1B5E20" letter-spacing="0.8">ENZODOL</text>
+  <text x="95" y="92" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="7" font-weight="bold" fill="#1B5E20" letter-spacing="0.6">ENZODOL</text>
   <!-- Divider line -->
   <line x1="74" y1="98" x2="116" y2="98" stroke="#A5D6A7" stroke-width="0.8"/>
   <!-- Subtitle -->
-  <text x="95" y="105" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="4.5" fill="#555" letter-spacing="0.4">PAIN RELIEF OINTMENT</text>
+  <text x="95" y="103" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="3.5" fill="#555" letter-spacing="0.3">PAIN RELIEF OINTMENT</text>
   <!-- Flame icon -->
   <path d="M90,112 C88,117 88,121 91,124 C92,125 94,126 95,126 C96,126 98,125 99,124 C102,121 102,117 100,112 C99,115 97,117 95,118 C93,117 91,115 90,112 Z" fill="url(#fire)"/>
   <path d="M93,115 C92,117 92,120 94,122 C94.5,122.5 95.5,122.5 96,122 C98,120 98,117 97,115 C96,117 95.5,118 95,118 C94.5,118 94,117 93,115 Z" fill="#FFF176"/>
   <!-- MAX FORCE badge -->
   <rect x="108" y="70" width="22" height="14" rx="3" fill="url(#badge)"/>
-  <text x="119" y="78" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="5" font-weight="bold" fill="white" letter-spacing="0.3">MAX</text>
-  <text x="119" y="82.5" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="3.5" fill="white" letter-spacing="0.3">FORCE</text>
+  <text x="119" y="78" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="4" font-weight="bold" fill="white" letter-spacing="0.2">MAX</text>
+  <text x="119" y="82" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="3" fill="white" letter-spacing="0.2">FORCE</text>
   <!-- Lightning bolt left -->
   <polygon points="44,80 40,90 45,88 41,98 50,87 45,89" fill="#FFC107" stroke="#FF8F00" stroke-width="0.3"/>
   <!-- Lightning bolt right -->
@@ -74,6 +74,6 @@
   <circle cx="155" cy="82" r="1.5" fill="#FFD54F" opacity="0.5"/>
   <circle cx="50" cy="70" r="1.5" fill="#FFD54F" opacity="0.4"/>
   <!-- Bottom branding -->
-  <text x="100" y="178" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="7" fill="#2E7D32" font-weight="bold" letter-spacing="0.4">by Enzo</text>
-  <text x="100" y="188" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="4" fill="#757575" font-style="italic">One rub and pain runs away</text>
+  <text x="100" y="178" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="5.5" fill="#2E7D32" font-weight="bold" letter-spacing="0.3">by Enzo</text>
+  <text x="100" y="187" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="3.2" fill="#757575" font-style="italic">One rub and pain runs away</text>
 </svg>
