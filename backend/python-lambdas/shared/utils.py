@@ -651,4 +651,15 @@ PRODUCTS: list[dict[str, Any]] = [
         "sku": "BEAU-007",
         "slug": "albertxidil",
     },
+    {
+        "id": 52,
+        "name": "Enzodol Max Force Pain Relief",
+        "description": "The legendary ointment by Enzo. One rub and pain runs away screaming. Formulated with volcanic thermal extract, capsaicin turbo blend, and Enzo's secret ingredient. Apply generously and feel the burn before the relief.",
+        "price": 34.99,
+        "imageUrl": "/images/products/enzodol.svg",
+        "category": "Beauty",
+        "stockQuantity": 300,
+        "sku": "BEAU-008",
+        "slug": "enzodol-max-force",
+    },
 ]

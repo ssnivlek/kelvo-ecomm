@@ -225,7 +225,11 @@ public class DataSeeder implements CommandLineRunner {
                 createProduct("Albertxidil Hair Growth Serum",
                         "Revolutionary hair and beard growth formula. Grow a magnificent mane and a legendary beard in weeks. Clinically tested, Albert-approved.",
                         new BigDecimal("49.99"), "albertxidil", "Beauty", 200, "BEAU-007",
-                        "/images/products/albertxidil.svg")
+                        "/images/products/albertxidil.svg"),
+                createProduct("Enzodol Max Force Pain Relief",
+                        "The legendary ointment by Enzo. One rub and pain runs away screaming. Formulated with volcanic thermal extract, capsaicin turbo blend, and Enzo's secret ingredient. Apply generously and feel the burn before the relief.",
+                        new BigDecimal("34.99"), "enzodol-max-force", "Beauty", 300, "BEAU-008",
+                        "/images/products/enzodol.svg")
         );
 
         productRepository.saveAll(products);
