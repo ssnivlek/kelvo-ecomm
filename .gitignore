@@ -2,6 +2,7 @@
 # .env is the ACTIVE config file (cp .env.local .env → fill in keys)
 # .env.local and .env.aws are TEMPLATES with placeholders (safe to commit)
 .env
+.env.deploy
 .env.filled
 .env.*.filled
 *.local.filled

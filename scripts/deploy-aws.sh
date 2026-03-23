@@ -19,10 +19,15 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # ── Load config ───────────────────────────────────────────────
-ENV_FILE="${PROJECT_ROOT}/.env.aws"
+# Reads .env.deploy (all deploy secrets in one place, git-ignored).
+# Falls back to .env.aws if .env.deploy doesn't exist.
+ENV_FILE="${PROJECT_ROOT}/.env.deploy"
 if [[ ! -f "$ENV_FILE" ]]; then
-  echo "ERROR: .env.aws not found. Copy .env.aws and fill in your values."
-  exit 1
+  ENV_FILE="${PROJECT_ROOT}/.env.aws"
+  if [[ ! -f "$ENV_FILE" ]]; then
+    echo "ERROR: .env.deploy not found. Fill in .env.deploy with your values."
+    exit 1
+  fi
 fi
 set -a; source "$ENV_FILE"; set +a
 
