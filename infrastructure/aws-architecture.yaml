@@ -640,6 +640,8 @@ Resources:
             - { Name: DD_API_KEY, Value: !Ref DatadogApiKey }
             - { Name: DD_SITE, Value: !Ref DatadogSite }
             - { Name: DD_APM_ENABLED, Value: 'true' }
+            - { Name: DD_PROCESS_AGENT_ENABLED, Value: 'true' }
+            - { Name: DD_LOGS_ENABLED, Value: 'true' }
             - { Name: ECS_FARGATE, Value: 'true' }
           MountPoints:
             - { ContainerPath: /var/run/datadog, SourceVolume: dd-sockets }
@@ -664,6 +666,7 @@ Resources:
             - { Name: DD_ENV, Value: !Ref Environment }
             - { Name: DD_VERSION, Value: '1.0.0' }
             - { Name: DD_LOGS_INJECTION, Value: 'true' }
+            - { Name: DD_PROFILING_ENABLED, Value: 'true' }
             - { Name: DD_DYNAMIC_INSTRUMENTATION_ENABLED, Value: 'true' }
             - { Name: DD_TRACE_AGENT_URL, Value: 'unix:///var/run/datadog/apm.socket' }
             - { Name: PORT, Value: '3001' }
@@ -725,6 +728,8 @@ Resources:
             - { Name: DD_API_KEY, Value: !Ref DatadogApiKey }
             - { Name: DD_SITE, Value: !Ref DatadogSite }
             - { Name: DD_APM_ENABLED, Value: 'true' }
+            - { Name: DD_PROCESS_AGENT_ENABLED, Value: 'true' }
+            - { Name: DD_LOGS_ENABLED, Value: 'true' }
             - { Name: ECS_FARGATE, Value: 'true' }
           MountPoints:
             - { ContainerPath: /var/run/datadog, SourceVolume: dd-sockets }
@@ -744,6 +749,7 @@ Resources:
             - { Name: DD_ENV, Value: !Ref Environment }
             - { Name: DD_VERSION, Value: '1.0.0' }
             - { Name: DD_LOGS_INJECTION, Value: 'true' }
+            - { Name: DD_PROFILING_ENABLED, Value: 'true' }
             - { Name: DD_DYNAMIC_INSTRUMENTATION_ENABLED, Value: 'true' }
             - { Name: DD_TRACE_AGENT_URL, Value: 'unix:///var/run/datadog/apm.socket' }
             - { Name: JWT_SECRET, Value: !Ref JwtSecret }
@@ -804,6 +810,8 @@ Resources:
             - { Name: DD_API_KEY, Value: !Ref DatadogApiKey }
             - { Name: DD_SITE, Value: !Ref DatadogSite }
             - { Name: DD_APM_ENABLED, Value: 'true' }
+            - { Name: DD_PROCESS_AGENT_ENABLED, Value: 'true' }
+            - { Name: DD_LOGS_ENABLED, Value: 'true' }
             - { Name: ECS_FARGATE, Value: 'true' }
           MountPoints:
             - { ContainerPath: /var/run/datadog, SourceVolume: dd-sockets }
@@ -823,6 +831,7 @@ Resources:
             - { Name: DD_ENV, Value: !Ref Environment }
             - { Name: DD_VERSION, Value: '1.0.0' }
             - { Name: DD_LOGS_INJECTION, Value: 'true' }
+            - { Name: DD_PROFILING_ENABLED, Value: 'true' }
             - { Name: DD_DYNAMIC_INSTRUMENTATION_ENABLED, Value: 'true' }
             - { Name: DD_TRACE_AGENT_URL, Value: 'unix:///var/run/datadog/apm.socket' }
             - { Name: PORT, Value: '3003' }
@@ -901,6 +910,7 @@ Resources:
           DD_ENV: !Ref Environment
           DD_VERSION: '1.0.0'
           DD_LOGS_INJECTION: 'true'
+          DD_PROFILING_ENABLED: 'true'
           DD_DYNAMIC_INSTRUMENTATION_ENABLED: 'true'
       Tags:
         - { Key: env, Value: !Ref Environment }
@@ -945,6 +955,7 @@ Resources:
           DD_ENV: !Ref Environment
           DD_VERSION: '1.0.0'
           DD_LOGS_INJECTION: 'true'
+          DD_PROFILING_ENABLED: 'true'
           DD_DYNAMIC_INSTRUMENTATION_ENABLED: 'true'
       Tags:
         - { Key: env, Value: !Ref Environment }
@@ -989,6 +1000,7 @@ Resources:
           DD_ENV: !Ref Environment
           DD_VERSION: '1.0.0'
           DD_LOGS_INJECTION: 'true'
+          DD_PROFILING_ENABLED: 'true'
           DD_DYNAMIC_INSTRUMENTATION_ENABLED: 'true'
       Tags:
         - { Key: env, Value: !Ref Environment }
