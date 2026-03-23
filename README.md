@@ -28,8 +28,8 @@ E-commerce application with polyglot microservices on AWS. Full observability wi
   |       EC2         |  |   ECS Fargate    |  |       Lambda         |
   |  Java 21          |  |   Node.js 20     |  |   Python 3.11        |
   |  Spring Boot      |  |   dd-trace       |  |                      |
-  |  dd-java-agent    |  |   UDS sockets    |  |   Remote Instr.      |
-  |  Datadog Agent    |  |   Firelens logs  |  |   (Datadog UI)       |
+  |  dd-java-agent    |  |   UDS sockets    |  |   Python311 Layer    |
+  |  Datadog Agent    |  |   Firelens logs  |  |   (via CFN)          |
   +---------+---------+  +--------+---------+  +----------------------+
             |                     |
             v                     v
@@ -247,12 +247,14 @@ redis-cli -h localhost -p 6379
 - **ElastiCache Redis** (`cache.t3.small`, 1 node, private subnet, no public access)
 
 The deploy script automatically:
+
 1. Creates the CloudFormation stack (VPC, subnets, security groups, RDS, ElastiCache, EC2, ECS, Lambda, ALB, API Gateway, S3, CloudFront)
 2. Builds and pushes Docker images to ECR
-3. Deploys the frontend to S3 + CloudFront
-4. Prints the RDS endpoint for you to create the Datadog monitoring user
-
-After deployment, you need to create the Datadog monitoring user on RDS (see the DBM section below).
+3. Updates ECS Fargate services with force-new-deployment
+4. Builds the Java JAR and deploys it to EC2 via SSM
+5. Deploys Python Lambda code packages
+6. Builds and deploys the React frontend to S3 + CloudFront invalidation
+7. **Automatically creates the Datadog `datadog` monitoring user on RDS** via SSM (polls until EC2 SSM agent is online, then runs the PostgreSQL GRANT commands idempotently)
 
 ---
 
@@ -311,8 +313,14 @@ The Datadog Agent is installed on the EC2 instance during boot (CloudFormation U
 java -javaagent:/opt/dd-java-agent.jar \
   -Ddd.service=kelvo-ecomm-order-service \
   -Ddd.env=production \
+  -Ddd.version=1.0.0 \
   -Ddd.profiling.enabled=true \
   -Ddd.logs.injection=true \
+  -Ddd.dynamic.instrumentation.enabled=true \
+  -Ddd.appsec.enabled=true \
+  -Ddd.appsec.rasp.enabled=true \
+  -Ddd.iast.enabled=true \
+  -Ddd.appsec.sca.enabled=true \
   -jar /opt/rumshop/order-service.jar
 ```
 
@@ -324,17 +332,26 @@ Each ECS task has two containers:
 
 Logs are routed to Datadog via **Firelens** (AWS FireLens with fluent-bit).
 
-### Python APM (Lambda — Remote Instrumentation)
+### Python APM (Lambda — Datadog Layer via CloudFormation)
 
-Lambda functions are deployed **without** any Datadog layers or environment variables. After deployment, enable instrumentation from the Datadog UI:
+Lambda functions are deployed with the `Datadog-Python311` layer and all required environment variables injected automatically by CloudFormation. No manual steps needed.
 
-1. Go to **APM > Service Setup > Serverless**
-2. Click **Remotely instrument in Datadog > Open Serverless**
-3. Click **+ Enable Region** and select your deployment region
-4. Select the `rumshop-*` Lambda functions
-5. Enable APM/Tracing and Logs, then click **Confirm**
+The layer ARN used: `arn:aws:lambda:<region>:464622532012:layer:Datadog-Python311:122`
 
-Datadog will automatically inject the required layers and environment variables into the Lambda functions. No code changes needed.
+Each Lambda has these env vars set at deploy time:
+
+```sh
+DD_API_KEY, DD_SITE, DD_SERVICE, DD_ENV, DD_VERSION
+DD_LOGS_INJECTION=true
+DD_PROFILING_ENABLED=true
+DD_DYNAMIC_INSTRUMENTATION_ENABLED=true
+DD_APPSEC_ENABLED=true
+DD_APPSEC_RASP_ENABLED=true
+DD_IAST_ENABLED=true
+DD_APPSEC_SCA_ENABLED=true
+```
+
+The handler wraps every function with `@datadog_lambda_wrapper` and uses `ddtrace.tracer` for custom spans.
 
 ### Docker Compose (local APM)
 
@@ -407,42 +424,22 @@ $$ LANGUAGE 'plpgsql' RETURNS NULL ON NULL INPUT SECURITY DEFINER;
 
 **Local setup**: This script runs automatically on first `docker-compose up`. It's mounted into the PostgreSQL container as `/docker-entrypoint-initdb.d/01-datadog.sql`.
 
-**AWS setup (RDS)**: After `deploy-aws.sh` finishes, connect to the RDS instance from the EC2 host and run the script:
+**AWS setup (RDS)**: Fully automated by `deploy-aws.sh`. The script:
+
+1. Waits up to 5 minutes for the EC2 SSM agent to come Online
+2. Sends an SSM `AWS-RunShellScript` command that runs the required `psql` GRANT statements on RDS
+3. Waits for the command to complete and reports success or failure
+
+No manual steps needed. If the automation fails (e.g. EC2 is still booting), the deploy script prints a warning and you can run it manually:
 
 ```bash
-# Connect to the EC2 instance via SSM Session Manager (no SSH key needed)
+# Connect to EC2 via SSM (no SSH port needed)
 aws ssm start-session --target <EC2_INSTANCE_ID> --region <AWS_REGION>
 
-# Install psql
-sudo dnf install -y postgresql16
-
-# Run the init script against RDS
-PGPASSWORD='<RDS_PASSWORD>' psql \
-  -h <RDS_ENDPOINT> \
-  -U rumshop \
-  -d rumshop \
-  -c "
-CREATE USER datadog WITH PASSWORD 'datadog';
-GRANT pg_monitor TO datadog;
-GRANT SELECT ON pg_stat_database TO datadog;
-CREATE SCHEMA IF NOT EXISTS datadog;
-GRANT USAGE ON SCHEMA datadog TO datadog;
-GRANT USAGE ON SCHEMA public TO datadog;
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO datadog;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO datadog;
-CREATE OR REPLACE FUNCTION datadog.explain_statement(l_query TEXT, OUT explain JSON)
-RETURNS SETOF JSON AS \\\$\\\$
-DECLARE curs REFCURSOR; plan JSON;
-BEGIN
-  OPEN curs FOR EXECUTE pg_catalog.concat('EXPLAIN (FORMAT JSON) ', l_query);
-  FETCH curs INTO plan; CLOSE curs;
-  RETURN QUERY SELECT plan;
-END;
-\\\$\\\$ LANGUAGE 'plpgsql' RETURNS NULL ON NULL INPUT SECURITY DEFINER;
-"
+# Run grants (postgresql15 is pre-installed on EC2 by CloudFormation)
+PGPASSWORD='<RDS_PASSWORD>' psql -h <RDS_ENDPOINT> -U rumshop -d rumshop \
+  -c "CREATE USER datadog WITH PASSWORD 'datadog'; GRANT pg_monitor TO datadog; GRANT SELECT ON pg_stat_database TO datadog; CREATE SCHEMA IF NOT EXISTS datadog; GRANT USAGE ON SCHEMA datadog TO datadog; GRANT USAGE ON SCHEMA public TO datadog; GRANT SELECT ON ALL TABLES IN SCHEMA public TO datadog; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO datadog;"
 ```
-
-Replace `<EC2_INSTANCE_ID>` with the value from the deploy output, `<RDS_ENDPOINT>` with the RDS endpoint, and `<RDS_PASSWORD>` with the password you set in `.env.deploy`.
 
 **Verify it works:**
 
@@ -517,6 +514,8 @@ init_config:
 instances:
   - host: <ELASTICACHE_ENDPOINT>
     port: 6379
+    command_key: true
+    slowlog-max-len: 128
     tags:
       - env:production
       - service:kelvo-ecomm-redis
@@ -589,19 +588,17 @@ Prerequisites: [AWS CLI](https://aws.amazon.com/cli/) installed and configured (
 ```bash
 # 1. Create your secrets file (git-ignored — never committed)
 cp .env.aws .env.deploy
-# Edit .env.deploy: set ALL <YOUR_...> values (see "Environment Variables" below)
+# Edit .env.deploy: fill in ALL values (see "Environment Variables" below)
 
-# 2. Deploy (takes ~15-20 minutes the first time)
+# 2. Deploy — fully automated, no manual steps after this
 ./scripts/deploy-aws.sh
 
-# 3. After deploy: create the Datadog DBM user on RDS
-#    (the deploy script prints the exact command to run)
+# 3. One manual step: add DD_API_KEY and DD_APP_KEY as GitHub Actions secrets
+#    Settings → Secrets and variables → Actions → New repository secret
+#    (required for SAST + SCA CI workflows to report results to Datadog)
 
-# 4. Enable Lambda Remote Instrumentation in the Datadog UI
-#    (see "Python APM" section above)
-
-# 5. When you're done, tear everything down via the AWS console
-#    or: aws cloudformation delete-stack --stack-name <STACK_NAME> --region <REGION>
+# 4. When done, tear everything down:
+aws cloudformation delete-stack --stack-name rumshop-production --region <AWS_REGION>
 ```
 
 ---

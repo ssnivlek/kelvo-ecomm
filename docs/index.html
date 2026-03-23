@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kelvo E-Comm — Datadog Demo</title>
+  <style>
+    :root {
+      --dd-purple: #632ca6;
+      --dd-purple-light: #8b5cf6;
+      --dd-green: #02a35a;
+      --dd-orange: #f5a623;
+      --dd-red: #e0341c;
+      --bg: #0d0d12;
+      --bg2: #14141e;
+      --bg3: #1c1c2a;
+      --border: #2a2a3e;
+      --text: #e2e0f0;
+      --muted: #8884a0;
+      --code-bg: #0a0a14;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(13,13,18,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex; align-items: center; gap: 2rem; height: 56px;
+    }
+    nav .logo {
+      font-weight: 700; font-size: 1rem;
+      color: var(--dd-purple-light); text-decoration: none;
+      letter-spacing: -0.3px;
+    }
+    nav a {
+      color: var(--muted); text-decoration: none; font-size: 0.875rem;
+      transition: color 0.15s;
+    }
+    nav a:hover { color: var(--text); }
+    nav .spacer { flex: 1; }
+    nav .gh-btn {
+      background: var(--dd-purple); color: #fff !important;
+      padding: 0.35rem 0.9rem; border-radius: 6px; font-size: 0.8rem;
+      font-weight: 600;
+    }
+    nav .gh-btn:hover { background: var(--dd-purple-light); }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      padding: 6rem 2rem 4rem;
+      background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(99,44,166,0.18) 0%, transparent 70%);
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(99,44,166,0.2); border: 1px solid rgba(99,44,166,0.4);
+      color: var(--dd-purple-light); font-size: 0.75rem; font-weight: 600;
+      padding: 0.3rem 0.8rem; border-radius: 20px; letter-spacing: 0.5px;
+      margin-bottom: 1.5rem; text-transform: uppercase;
+    }
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      font-weight: 800; letter-spacing: -1px;
+      background: linear-gradient(135deg, #fff 0%, var(--dd-purple-light) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      color: var(--muted); font-size: 1.1rem; max-width: 600px;
+      margin: 1rem auto 2.5rem;
+    }
+    .hero-cta { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--dd-purple); color: #fff;
+      padding: 0.7rem 1.6rem; border-radius: 8px; font-weight: 600;
+      text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+    }
+    .btn-primary:hover { background: var(--dd-purple-light); }
+    .btn-secondary {
+      background: var(--bg3); color: var(--text); border: 1px solid var(--border);
+      padding: 0.7rem 1.6rem; border-radius: 8px; font-weight: 600;
+      text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+    }
+    .btn-secondary:hover { background: var(--bg2); }
+
+    /* ── BADGE STRIP ── */
+    .badge-strip {
+      display: flex; flex-wrap: wrap; gap: 0.6rem;
+      justify-content: center; padding: 1.5rem 2rem 3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .badge {
+      display: flex; align-items: center; gap: 0.4rem;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.35rem 0.75rem;
+      font-size: 0.8rem; font-weight: 600;
+    }
+    .badge .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-green { background: var(--dd-green); box-shadow: 0 0 6px var(--dd-green); }
+    .dot-orange { background: var(--dd-orange); }
+    .dot-purple { background: var(--dd-purple-light); }
+
+    /* ── SECTIONS ── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+    section { padding: 4rem 0; border-bottom: 1px solid var(--border); }
+    section:last-child { border-bottom: none; }
+    h2 {
+      font-size: 1.6rem; font-weight: 700; margin-bottom: 0.5rem;
+      letter-spacing: -0.4px;
+    }
+    h2 .accent { color: var(--dd-purple-light); }
+    .section-sub { color: var(--muted); margin-bottom: 2.5rem; font-size: 0.95rem; }
+
+    /* ── CARDS GRID ── */
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.2rem; }
+    .card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.5rem;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .card:hover { border-color: var(--dd-purple); transform: translateY(-2px); }
+    .card-icon { font-size: 1.6rem; margin-bottom: 0.75rem; }
+    .card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .card p { color: var(--muted); font-size: 0.875rem; }
+    .card .tag {
+      display: inline-block; background: rgba(99,44,166,0.15);
+      border: 1px solid rgba(99,44,166,0.3); color: var(--dd-purple-light);
+      font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.5rem;
+      border-radius: 4px; margin-top: 0.75rem; margin-right: 0.3rem;
+    }
+
+    /* ── SERVICES TABLE ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th {
+      background: var(--bg3); color: var(--muted); font-weight: 600;
+      padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border);
+    }
+    td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg2); }
+    .pill {
+      display: inline-block; padding: 0.2rem 0.5rem;
+      border-radius: 4px; font-size: 0.75rem; font-weight: 600;
+    }
+    .pill-java { background: rgba(245,166,35,0.15); color: var(--dd-orange); }
+    .pill-node { background: rgba(2,163,90,0.15); color: var(--dd-green); }
+    .pill-py { background: rgba(99,44,166,0.15); color: var(--dd-purple-light); }
+    .pill-react { background: rgba(97,218,251,0.12); color: #61dafb; }
+
+    /* ── DEPLOY STEPS ── */
+    .steps { display: flex; flex-direction: column; gap: 1rem; }
+    .step {
+      display: flex; gap: 1rem; align-items: flex-start;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.25rem 1.5rem;
+    }
+    .step-num {
+      flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
+      background: var(--dd-purple); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 700;
+    }
+    .step-body h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .step-body p { color: var(--muted); font-size: 0.875rem; }
+    .step.manual { border-color: rgba(245,166,35,0.4); }
+    .step.manual .step-num { background: var(--dd-orange); }
+
+    /* ── CODE BLOCK ── */
+    pre {
+      background: var(--code-bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.25rem 1.5rem;
+      overflow-x: auto; font-size: 0.85rem; line-height: 1.7;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+    .comment { color: #555a72; }
+    .cmd { color: #a5f3cb; }
+    code {
+      background: var(--code-bg); border: 1px solid var(--border);
+      border-radius: 4px; padding: 0.1em 0.35em; font-size: 0.875em;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    /* ── DATADOG FEATURE GRID ── */
+    .feature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+    .feature {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1.25rem; position: relative; overflow: hidden;
+    }
+    .feature::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--dd-purple);
+    }
+    .feature.green::before { background: var(--dd-green); }
+    .feature.orange::before { background: var(--dd-orange); }
+    .feature h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .feature .where { color: var(--muted); font-size: 0.8rem; margin-bottom: 0.6rem; }
+    .feature .verify { font-size: 0.78rem; color: var(--text); }
+    .feature .verify span { color: var(--muted); }
+
+    /* ── FINOPS TABLE ── */
+    .savings { color: var(--dd-green); font-weight: 600; }
+
+    /* ── ALERT ── */
+    .alert {
+      background: rgba(245,166,35,0.1); border: 1px solid rgba(245,166,35,0.35);
+      border-radius: 8px; padding: 1rem 1.25rem; font-size: 0.875rem;
+      display: flex; gap: 0.75rem; align-items: flex-start; margin-bottom: 2rem;
+    }
+    .alert-icon { font-size: 1.1rem; flex-shrink: 0; }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center; padding: 2.5rem 2rem;
+      color: var(--muted); font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--dd-purple-light); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<!-- ─── NAV ────────────────────────────────────────────────────────────── -->
+<nav>
+  <a class="logo" href="#">Kelvo E-Comm</a>
+  <a href="#deploy">Deploy</a>
+  <a href="#features">Datadog</a>
+  <a href="#services">Services</a>
+  <a href="#finops">FinOps</a>
+  <div class="spacer"></div>
+  <a class="gh-btn" href="https://github.com/ssnivlek/kelvo-ecomm" target="_blank">GitHub →</a>
+</nav>
+
+<!-- ─── HERO ────────────────────────────────────────────────────────────── -->
+<div class="hero">
+  <div class="hero-badge">Datadog Demo App</div>
+  <h1>Kelvo E-Comm</h1>
+  <p>Polyglot microservices on AWS — fully instrumented with Datadog RUM, APM, DBM, ASM, IAST, RASP, SCA, SAST, Profiling, and FinOps.</p>
+  <div class="hero-cta">
+    <a class="btn-primary" href="#deploy">Deploy to AWS</a>
+    <a class="btn-secondary" href="#features">View Datadog Features</a>
+  </div>
+</div>
+
+<!-- ─── BADGE STRIP ─────────────────────────────────────────────────────── -->
+<div class="badge-strip">
+  <div class="badge"><span class="dot dot-green"></span>RUM</div>
+  <div class="badge"><span class="dot dot-green"></span>APM</div>
+  <div class="badge"><span class="dot dot-green"></span>Logs</div>
+  <div class="badge"><span class="dot dot-green"></span>DBM</div>
+  <div class="badge"><span class="dot dot-green"></span>Profiling</div>
+  <div class="badge"><span class="dot dot-green"></span>ASM</div>
+  <div class="badge"><span class="dot dot-green"></span>RASP</div>
+  <div class="badge"><span class="dot dot-green"></span>IAST</div>
+  <div class="badge"><span class="dot dot-green"></span>SCA</div>
+  <div class="badge"><span class="dot dot-green"></span>SAST (CI)</div>
+  <div class="badge"><span class="dot dot-green"></span>Live Process</div>
+  <div class="badge"><span class="dot dot-orange"></span>FinOps</div>
+</div>
+
+<!-- ─── SERVICES ────────────────────────────────────────────────────────── -->
+<section id="services">
+  <div class="container">
+    <h2>Architecture <span class="accent">— 7 Services, 3 Languages</span></h2>
+    <p class="section-sub">Each service runs on a different AWS compute type to demonstrate full-stack Datadog observability.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Service</th><th>Language</th><th>AWS Runtime</th><th>Local Port</th><th>Datadog Service</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Orders</strong></td>
+            <td><span class="pill pill-java">Java 21 / Spring Boot</span></td>
+            <td>EC2 t3.medium</td><td>8080</td>
+            <td><code>kelvo-ecomm-order-service</code></td>
+          </tr>
+          <tr>
+            <td><strong>Cart</strong></td>
+            <td><span class="pill pill-node">Node.js 20</span></td>
+            <td>ECS Fargate</td><td>3001</td>
+            <td><code>kelvo-ecomm-cart</code></td>
+          </tr>
+          <tr>
+            <td><strong>Auth</strong></td>
+            <td><span class="pill pill-node">Node.js 20</span></td>
+            <td>ECS Fargate</td><td>3002</td>
+            <td><code>kelvo-ecomm-auth</code></td>
+          </tr>
+          <tr>
+            <td><strong>Payment</strong></td>
+            <td><span class="pill pill-node">Node.js 20</span></td>
+            <td>ECS Fargate</td><td>3003</td>
+            <td><code>kelvo-ecomm-payment</code></td>
+          </tr>
+          <tr>
+            <td><strong>Search</strong></td>
+            <td><span class="pill pill-py">Python 3.11</span></td>
+            <td>Lambda</td><td>3004</td>
+            <td><code>kelvo-ecomm-search</code></td>
+          </tr>
+          <tr>
+            <td><strong>Recommendations</strong></td>
+            <td><span class="pill pill-py">Python 3.11</span></td>
+            <td>Lambda</td><td>3005</td>
+            <td><code>kelvo-ecomm-recommendations</code></td>
+          </tr>
+          <tr>
+            <td><strong>Notifications</strong></td>
+            <td><span class="pill pill-py">Python 3.11</span></td>
+            <td>Lambda</td><td>3006</td>
+            <td><code>kelvo-ecomm-notifications</code></td>
+          </tr>
+          <tr>
+            <td><strong>Frontend</strong></td>
+            <td><span class="pill pill-react">React + TypeScript</span></td>
+            <td>S3 + CloudFront</td><td>3000</td>
+            <td><code>kelvo-ecomm</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <br>
+    <h3 style="margin-bottom:1rem;margin-top:2rem;">Databases</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Database</th><th>AWS</th><th>Used By</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>PostgreSQL 16</td>
+            <td>RDS db.t3.medium (private subnet)</td>
+            <td>Orders (products, orders) · Auth (users)</td>
+          </tr>
+          <tr>
+            <td>Redis 7</td>
+            <td>ElastiCache cache.t3.small (private subnet)</td>
+            <td>Cart (sessions) · Payment (payment intents)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ─── DEPLOY ───────────────────────────────────────────────────────────── -->
+<section id="deploy">
+  <div class="container">
+    <h2>Deploy <span class="accent">— One Command</span></h2>
+    <p class="section-sub"><code>./scripts/deploy-aws.sh</code> does everything from scratch. No manual steps required after filling in <code>.env.deploy</code>.</p>
+
+    <div class="alert">
+      <span class="alert-icon">⚠️</span>
+      <div>
+        <strong>One manual step after deploy:</strong> Add <code>DD_API_KEY</code> and <code>DD_APP_KEY</code> as GitHub Actions secrets in your repo
+        (<strong>Settings → Secrets and variables → Actions</strong>). Required for SAST + SCA CI workflows to report results to Datadog.
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Fill in <code>.env.deploy</code></h4>
+          <p>Copy <code>.env.aws</code> to <code>.env.deploy</code> and set your AWS, Datadog, and RDS credentials. File is git-ignored — never committed.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Run the deploy script</h4>
+          <p>Takes ~15–25 minutes on first deploy. Creates CloudFormation stack, builds Docker images, deploys Lambda code, builds and uploads the React frontend.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>DBM user created automatically</h4>
+          <p>The script waits for the EC2 SSM agent, then runs the PostgreSQL GRANT commands on RDS via SSM. No SSH access needed.</p>
+        </div>
+      </div>
+      <div class="step manual">
+        <div class="step-num">!</div>
+        <div class="step-body">
+          <h4>Add GitHub Actions secrets (manual)</h4>
+          <p>Add <code>DD_API_KEY</code> and <code>DD_APP_KEY</code> to your repo's Actions secrets so SAST + SCA CI workflows can send results to Datadog.</p>
+        </div>
+      </div>
+    </div>
+
+    <br>
+    <pre><span class="comment"># 1. Set your secrets</span>
+cp .env.aws .env.deploy
+<span class="comment"># edit .env.deploy with real values</span>
+
+<span class="comment"># 2. Deploy everything (fully automated)</span>
+<span class="cmd">./scripts/deploy-aws.sh</span>
+
+<span class="comment"># 3. Tear down when done</span>
+aws cloudformation delete-stack --stack-name rumshop-production --region us-west-2</pre>
+
+    <br>
+    <h3 style="margin-bottom:1rem;margin-top:2rem;">What the script deploys</h3>
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">🏗️</div>
+        <h3>CloudFormation Stack</h3>
+        <p>VPC, public/private subnets, NAT Gateway, Internet Gateway, security groups, RDS, ElastiCache, EC2, ECS Cluster, ECR repos, API Gateway, S3, CloudFront.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🐳</div>
+        <h3>Docker → ECR → ECS</h3>
+        <p>Builds cart, auth, payment Node.js images, pushes to ECR, force-redeploys ECS Fargate services.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">☕</div>
+        <h3>Java JAR → EC2</h3>
+        <p>Runs Maven build, uploads JAR to S3, pulls from EC2 via SSM, restarts the systemd service.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🐍</div>
+        <h3>Python → Lambda</h3>
+        <p>Zips search, recommendations, notifications handlers, and deploys to Lambda. Datadog-Python311 layer already attached via CloudFormation.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">⚛️</div>
+        <h3>React → S3 + CloudFront</h3>
+        <p>npm build with injected env vars, S3 sync, CloudFront invalidation. Routing via CloudFront CacheBehaviors — <code>/api/*</code> proxied to ALB.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🗃️</div>
+        <h3>DBM user on RDS</h3>
+        <p>Polls EC2 SSM agent, sends psql GRANT commands. Creates the <code>datadog</code> monitoring user with <code>pg_monitor</code> role for Database Monitoring.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── DATADOG FEATURES ─────────────────────────────────────────────────── -->
+<section id="features">
+  <div class="container">
+    <h2>Datadog Features <span class="accent">— Full Coverage</span></h2>
+    <p class="section-sub">Every feature is enabled automatically via CloudFormation, CloudFormation UserData, ECS task env vars, or GitHub Actions CI.</p>
+
+    <div class="feature-grid">
+
+      <div class="feature green">
+        <h3>RUM — Real User Monitoring</h3>
+        <div class="where">frontend/src/index.tsx · @datadog/browser-rum</div>
+        <div class="verify"><span>Verify:</span> Digital Experience → RUM → Sessions. Browse the app to see session replays and correlated APM traces.</div>
+        <span class="tag">Session Replay</span>
+        <span class="tag">RUM-to-APM</span>
+      </div>
+
+      <div class="feature green">
+        <h3>APM — Distributed Tracing</h3>
+        <div class="where">dd-java-agent (EC2) · dd-trace/init (ECS) · @datadog_lambda_wrapper (Lambda)</div>
+        <div class="verify"><span>Verify:</span> APM → Services. Apply BLACKFRIDAY coupon to generate a cross-service error trace.</div>
+        <span class="tag">Java</span>
+        <span class="tag">Node.js</span>
+        <span class="tag">Python</span>
+      </div>
+
+      <div class="feature green">
+        <h3>Continuous Profiler</h3>
+        <div class="where">-Ddd.profiling.enabled=true · DD_PROFILING_ENABLED=true</div>
+        <div class="verify"><span>Verify:</span> APM → Profiling → filter by kelvo-ecomm-order-service. Flame graphs after ~1 min of traffic.</div>
+        <span class="tag">Java</span>
+        <span class="tag">Node.js</span>
+        <span class="tag">Lambda</span>
+      </div>
+
+      <div class="feature green">
+        <h3>Dynamic Instrumentation</h3>
+        <div class="where">-Ddd.dynamic.instrumentation.enabled=true · DD_DYNAMIC_INSTRUMENTATION_ENABLED=true</div>
+        <div class="verify"><span>Verify:</span> APM → Dynamic Instrumentation → add a log probe to any running method. Output appears live without redeployment.</div>
+        <span class="tag">Java</span>
+        <span class="tag">Node.js</span>
+      </div>
+
+      <div class="feature">
+        <h3>ASM — Threat Detection</h3>
+        <div class="where">-Ddd.appsec.enabled=true · DD_APPSEC_ENABLED=true</div>
+        <div class="verify"><span>Verify:</span> Security → Application Security → Traces. Send <code>?id=1 OR 1=1</code> and observe the SQL injection flag.</div>
+        <span class="tag">Java</span>
+        <span class="tag">Node.js</span>
+        <span class="tag">Lambda</span>
+      </div>
+
+      <div class="feature">
+        <h3>RASP — Runtime Protection</h3>
+        <div class="where">-Ddd.appsec.rasp.enabled=true · DD_APPSEC_RASP_ENABLED=true</div>
+        <div class="verify"><span>Verify:</span> Security → Application Security → Signals. RASP-blocked requests show HTTP 403 with <code>rasp</code> rule category.</div>
+        <span class="tag">Java</span>
+        <span class="tag">Node.js</span>
+        <span class="tag">Lambda</span>
+      </div>
+
+      <div class="feature">
+        <h3>IAST — Code Security</h3>
+        <div class="where">-Ddd.iast.enabled=true · DD_IAST_ENABLED=true</div>
+        <div class="verify"><span>Verify:</span> Security → Code Security → Vulnerabilities. Runtime-detected issues appear with file and line references.</div>
+        <span class="tag">Java</span>
+        <span class="tag">Node.js</span>
+        <span class="tag">Lambda</span>
+      </div>
+
+      <div class="feature">
+        <h3>SCA — Dependency Vulnerabilities</h3>
+        <div class="where">DD_APPSEC_SCA_ENABLED=true · datadog-sca-github-action (CI)</div>
+        <div class="verify"><span>Verify:</span> Security → Code Security → Libraries. Known CVEs in npm/pip/Maven deps. CI results in Code Analysis → Pipelines.</div>
+        <span class="tag">Runtime</span>
+        <span class="tag">CI/CD</span>
+      </div>
+
+      <div class="feature">
+        <h3>SAST — Static Analysis</h3>
+        <div class="where">.github/workflows/datadog-static-analysis.yml · datadog-static-analyzer-github-action</div>
+        <div class="verify"><span>Verify:</span> Security → Code Security → Code Analysis. Findings link to exact file/line in GitHub. Requires DD_API_KEY + DD_APP_KEY secrets.</div>
+        <span class="tag">CI/CD</span>
+        <span class="tag">GitHub Actions</span>
+      </div>
+
+      <div class="feature green">
+        <h3>DBM — Database Monitoring</h3>
+        <div class="where">Datadog Agent on EC2 · postgres.d/conf.yaml · redisdb.d/conf.yaml</div>
+        <div class="verify"><span>Verify:</span> APM → Database Monitoring → Queries (PostgreSQL) · Infrastructure → Redis dashboard. Traces show "View in DBM" link.</div>
+        <span class="tag">PostgreSQL (RDS)</span>
+        <span class="tag">Redis (ElastiCache)</span>
+        <span class="tag">command_key</span>
+      </div>
+
+      <div class="feature green">
+        <h3>Live Process Monitoring</h3>
+        <div class="where">process_config.process_collection.enabled: true (EC2 Agent)</div>
+        <div class="verify"><span>Verify:</span> Infrastructure → Processes → filter by the EC2 host. Shows <code>java</code>, <code>datadog-agent</code>, and all system processes live.</div>
+        <span class="tag">EC2</span>
+      </div>
+
+      <div class="feature orange">
+        <h3>FinOps / Cloud Cost</h3>
+        <div class="where">Resources intentionally oversized in CloudFormation</div>
+        <div class="verify"><span>Verify:</span> Infrastructure → Cloud Cost → Recommendations (appears after 48–72 h). EC2, ECS, RDS, Redis all flagged for downsizing.</div>
+        <span class="tag">EC2 t3.medium → t3.small</span>
+        <span class="tag">RDS db.t3.medium → micro</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── ERROR DEMOS ──────────────────────────────────────────────────────── -->
+<section id="demos">
+  <div class="container">
+    <h2>Error Demos <span class="accent">— Built-in for Datadog</span></h2>
+    <p class="section-sub">Intentional errors to showcase RUM-to-APM trace correlation and cross-service error propagation.</p>
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">🛒</div>
+        <h3>Smart Watch Pro — Cart Limit</h3>
+        <p>Add product #3 three times. The 3rd add fails with a generic frontend error. The real cause (<em>inventory sync timeout — warehouse-api.internal:8443 unreachable</em>) is only visible in Datadog APM traces.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎟️</div>
+        <h3>BLACKFRIDAY Coupon</h3>
+        <p>Enter coupon <code>BLACKFRIDAY</code> in the cart. Cart calls Payment to validate — Payment returns a 500 (simulated Redis timeout). Full error chain visible in Datadog APM across both services.</p>
+      </div>
+    </div>
+
+    <br>
+    <h3 style="margin-bottom:1rem;margin-top:2rem;">Demo Coupons</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Code</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td><code>KELVO10</code></td><td>10% off</td></tr>
+          <tr><td><code>KELVO25</code></td><td>25% off</td></tr>
+          <tr><td><code>WELCOME5</code></td><td>5% welcome discount</td></tr>
+          <tr><td><code>FRETE</code></td><td>Free shipping</td></tr>
+          <tr><td><code>BLACKFRIDAY</code></td><td>Triggers backend 500 — use for Datadog error tracking demo</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="color:var(--muted);font-size:0.85rem;margin-top:0.75rem;">Demo login: <code>demo@kelvo-ecomm.com</code> / <code>password123</code></p>
+  </div>
+</section>
+
+<!-- ─── FINOPS ───────────────────────────────────────────────────────────── -->
+<section id="finops">
+  <div class="container">
+    <h2>FinOps <span class="accent">— Intentional Overprovisioning</span></h2>
+    <p class="section-sub">Resources are deployed oversized so Datadog Cloud Cost Recommendations flags them. Check Infrastructure → Cloud Cost after 48–72 hours.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Resource</th><th>Deployed (demo)</th><th>Right-sized (ideal)</th><th>Monthly savings</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>EC2</td>
+            <td>t3.medium ~$30/mo</td>
+            <td>t3.small ~$15/mo</td>
+            <td class="savings">~$15</td>
+          </tr>
+          <tr>
+            <td>ECS × 3 tasks</td>
+            <td>512 CPU / 1024 MB ~$54/mo</td>
+            <td>256 / 512 ~$27/mo</td>
+            <td class="savings">~$27</td>
+          </tr>
+          <tr>
+            <td>RDS</td>
+            <td>db.t3.medium ~$50/mo</td>
+            <td>db.t3.micro ~$12/mo</td>
+            <td class="savings">~$38</td>
+          </tr>
+          <tr>
+            <td>ElastiCache</td>
+            <td>cache.t3.small ~$25/mo</td>
+            <td>cache.t3.micro ~$12/mo</td>
+            <td class="savings">~$13</td>
+          </tr>
+          <tr>
+            <td><strong>Total</strong></td>
+            <td><strong>~$159/mo</strong></td>
+            <td><strong>~$66/mo</strong></td>
+            <td class="savings"><strong>~$93/mo (58%)</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ───────────────────────────────────────────────────────────── -->
+<footer>
+  <p>Kelvo E-Comm — Datadog Demo &nbsp;·&nbsp;
+    <a href="https://github.com/ssnivlek/kelvo-ecomm" target="_blank">GitHub</a> &nbsp;·&nbsp;
+    <a href="https://app.datadoghq.com" target="_blank">Datadog</a> &nbsp;·&nbsp;
+    <a href="https://docs.datadoghq.com" target="_blank">Datadog Docs</a>
+  </p>
+</footer>
+
+</body>
+</html>

@@ -907,10 +907,9 @@ Resources:
       AutoDeploy: true
 
   # ────────────────────────────────────────────────────────────
-  # Lambda Functions — CLEAN (no Datadog layers/env)
-  # Instrumented via Datadog Remote Instrumentation.
-  # After deploying this stack, go to Datadog > APM > Service Setup
-  # > Serverless > Remote Instrumentation to enable these functions.
+  # Lambda Functions — Instrumented via Datadog-Python311 layer
+  # Layer + DD_API_KEY/DD_SITE/ASM/IAST/SCA env vars injected here.
+  # No manual Remote Instrumentation steps needed.
   # ────────────────────────────────────────────────────────────
   SearchFn:
     Type: AWS::Lambda::Function
