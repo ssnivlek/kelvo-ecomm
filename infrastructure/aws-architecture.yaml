@@ -400,6 +400,9 @@ Resources:
             -Ddd.profiling.enabled=true \
             -Ddd.logs.injection=true \
             -Ddd.dynamic.instrumentation.enabled=true \
+            -Ddd.appsec.enabled=true \
+            -Ddd.iast.enabled=true \
+            -Ddd.appsec.sca.enabled=true \
             -Ddd.trace.analytics.enabled=true \
             -Xmx512m -Xms256m \
             -jar /opt/rumshop/order-service.jar
@@ -668,6 +671,10 @@ Resources:
             - { Name: DD_LOGS_INJECTION, Value: 'true' }
             - { Name: DD_PROFILING_ENABLED, Value: 'true' }
             - { Name: DD_DYNAMIC_INSTRUMENTATION_ENABLED, Value: 'true' }
+            - { Name: DD_APPSEC_ENABLED, Value: 'true' }
+            - { Name: DD_APPSEC_RASP_ENABLED, Value: 'true' }
+            - { Name: DD_IAST_ENABLED, Value: 'true' }
+            - { Name: DD_APPSEC_SCA_ENABLED, Value: 'true' }
             - { Name: DD_TRACE_AGENT_URL, Value: 'unix:///var/run/datadog/apm.socket' }
             - { Name: PORT, Value: '3001' }
             - Name: REDIS_URL
@@ -751,6 +758,10 @@ Resources:
             - { Name: DD_LOGS_INJECTION, Value: 'true' }
             - { Name: DD_PROFILING_ENABLED, Value: 'true' }
             - { Name: DD_DYNAMIC_INSTRUMENTATION_ENABLED, Value: 'true' }
+            - { Name: DD_APPSEC_ENABLED, Value: 'true' }
+            - { Name: DD_APPSEC_RASP_ENABLED, Value: 'true' }
+            - { Name: DD_IAST_ENABLED, Value: 'true' }
+            - { Name: DD_APPSEC_SCA_ENABLED, Value: 'true' }
             - { Name: DD_TRACE_AGENT_URL, Value: 'unix:///var/run/datadog/apm.socket' }
             - { Name: JWT_SECRET, Value: !Ref JwtSecret }
             - { Name: PORT, Value: '3002' }
@@ -833,6 +844,10 @@ Resources:
             - { Name: DD_LOGS_INJECTION, Value: 'true' }
             - { Name: DD_PROFILING_ENABLED, Value: 'true' }
             - { Name: DD_DYNAMIC_INSTRUMENTATION_ENABLED, Value: 'true' }
+            - { Name: DD_APPSEC_ENABLED, Value: 'true' }
+            - { Name: DD_APPSEC_RASP_ENABLED, Value: 'true' }
+            - { Name: DD_IAST_ENABLED, Value: 'true' }
+            - { Name: DD_APPSEC_SCA_ENABLED, Value: 'true' }
             - { Name: DD_TRACE_AGENT_URL, Value: 'unix:///var/run/datadog/apm.socket' }
             - { Name: PORT, Value: '3003' }
             - Name: REDIS_URL
@@ -912,6 +927,10 @@ Resources:
           DD_LOGS_INJECTION: 'true'
           DD_PROFILING_ENABLED: 'true'
           DD_DYNAMIC_INSTRUMENTATION_ENABLED: 'true'
+          DD_APPSEC_ENABLED: 'true'
+          DD_APPSEC_RASP_ENABLED: 'true'
+          DD_IAST_ENABLED: 'true'
+          DD_APPSEC_SCA_ENABLED: 'true'
       Tags:
         - { Key: env, Value: !Ref Environment }
         - { Key: service, Value: kelvo-ecomm-search }
@@ -957,6 +976,10 @@ Resources:
           DD_LOGS_INJECTION: 'true'
           DD_PROFILING_ENABLED: 'true'
           DD_DYNAMIC_INSTRUMENTATION_ENABLED: 'true'
+          DD_APPSEC_ENABLED: 'true'
+          DD_APPSEC_RASP_ENABLED: 'true'
+          DD_IAST_ENABLED: 'true'
+          DD_APPSEC_SCA_ENABLED: 'true'
       Tags:
         - { Key: env, Value: !Ref Environment }
         - { Key: service, Value: kelvo-ecomm-recommendations }
@@ -1002,6 +1025,10 @@ Resources:
           DD_LOGS_INJECTION: 'true'
           DD_PROFILING_ENABLED: 'true'
           DD_DYNAMIC_INSTRUMENTATION_ENABLED: 'true'
+          DD_APPSEC_ENABLED: 'true'
+          DD_APPSEC_RASP_ENABLED: 'true'
+          DD_IAST_ENABLED: 'true'
+          DD_APPSEC_SCA_ENABLED: 'true'
       Tags:
         - { Key: env, Value: !Ref Environment }
         - { Key: service, Value: kelvo-ecomm-notifications }
