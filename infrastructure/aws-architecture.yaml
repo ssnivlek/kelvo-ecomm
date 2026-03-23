@@ -533,7 +533,7 @@ Resources:
     Properties:
       DBInstanceIdentifier: !Sub '${AWS::StackName}-postgres'
       Engine: postgres
-      EngineVersion: '16.4'
+      EngineVersion: '16.13'
       DBInstanceClass: !Ref RDSInstanceClass
       AllocatedStorage: 20
       StorageType: gp3
