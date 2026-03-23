@@ -741,3 +741,127 @@ Enter the coupon code `BLACKFRIDAY` in the cart drawer. The Cart Service calls t
 
 Email: `demo@kelvo-ecomm.com`
 Password: `password123`
+
+---
+
+## Datadog Features — Where They Are and How to Verify
+
+### RUM (Real User Monitoring)
+
+**Enabled in:** `frontend/src/index.tsx` — `datadogRum.init(...)` with session replay, resource tracking, and user interactions.
+
+**Verify:** Digital Experience → RUM → Sessions. Browse the app, then open any session to see the replay and correlated APM traces.
+
+---
+
+### APM (Distributed Tracing)
+
+**Enabled in:**
+
+- Java (EC2): `-javaagent:/opt/dd-java-agent.jar`
+- Node.js (ECS): `NODE_OPTIONS='--require=dd-trace/init'` + UDS socket
+- Python (Lambda): `@datadog_lambda_wrapper` decorator + `Datadog-Python311` layer
+
+**Verify:** APM → Services. You should see `kelvo-ecomm-order-service`, `kelvo-ecomm-cart`, `kelvo-ecomm-auth`, `kelvo-ecomm-payment`, `kelvo-ecomm-search`, `kelvo-ecomm-recommendations`, `kelvo-ecomm-notifications`. Apply the `BLACKFRIDAY` coupon to generate a cross-service error trace.
+
+---
+
+### Continuous Profiler
+
+**Enabled in:** Java: `-Ddd.profiling.enabled=true` | Node.js: `DD_PROFILING_ENABLED=true`
+
+**Verify:** APM → Profiling → filter by `kelvo-ecomm-order-service`. Flame graphs for CPU and heap allocation appear after ~1 min of traffic.
+
+---
+
+### Dynamic Instrumentation
+
+**Enabled in:** Java: `-Ddd.dynamic.instrumentation.enabled=true` | Node.js: `DD_DYNAMIC_INSTRUMENTATION_ENABLED=true`
+
+**Verify:** APM → Dynamic Instrumentation → select any service → add a log or metric probe to any running method. Output appears live without redeployment.
+
+---
+
+### ASM — Application Security (Threat Detection + Blocking)
+
+**Enabled in:** Java: `-Ddd.appsec.enabled=true` | Node.js: `DD_APPSEC_ENABLED=true` | Lambda: `DD_APPSEC_ENABLED=true`
+
+**Verify:** Security → Application Security → Traces. Send a crafted request (e.g., `?id=1 OR 1=1`) and observe it flagged as a SQL injection attempt.
+
+---
+
+### RASP — Runtime Application Self-Protection
+
+**Enabled in:** Java: `-Ddd.appsec.rasp.enabled=true` | Node.js: `DD_APPSEC_RASP_ENABLED=true` | Lambda: `DD_APPSEC_RASP_ENABLED=true`
+
+**Verify:** Security → Application Security → Signals. RASP-blocked requests show `Blocked` status (HTTP 403) with `rasp` in the rule category, rather than just `Detected`.
+
+---
+
+### IAST — Interactive Application Security Testing
+
+**Enabled in:** Java: `-Ddd.iast.enabled=true` | Node.js: `DD_IAST_ENABLED=true` | Lambda: `DD_IAST_ENABLED=true`
+
+**Verify:** Security → Code Security → Vulnerabilities. Vulnerabilities detected at runtime (weak crypto, insecure deserialization, hardcoded secrets) appear with file and line references after the app receives traffic.
+
+---
+
+### SCA — Software Composition Analysis
+
+**Enabled in:**
+
+- Runtime: Java `-Ddd.appsec.sca.enabled=true` | Node.js `DD_APPSEC_SCA_ENABLED=true` | Lambda `DD_APPSEC_SCA_ENABLED=true`
+- CI: `.github/workflows/datadog-static-analysis.yml` runs `DataDog/datadog-sca-github-action@v1` on every push
+
+**Verify:** Security → Code Security → Libraries. Known CVEs in npm/pip/Maven dependencies appear. CI scan results are under Security → Code Security → Pipelines.
+
+---
+
+### SAST — Static Application Security Testing
+
+**Enabled in:** `.github/workflows/datadog-static-analysis.yml` (`DataDog/datadog-static-analyzer-github-action@v1`). Rules configured in `static-analysis.datadog.yml` (JavaScript, TypeScript, Python, Java, Docker).
+
+**Setup required:** Add `DD_API_KEY` and `DD_APP_KEY` as [GitHub Actions secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets) in the repo settings.
+
+**Verify:** Security → Code Security → Code Analysis → filter by this repository. Findings link to exact file/line in GitHub.
+
+---
+
+### DBM — Database Monitoring
+
+**Enabled in:** Datadog Agent on EC2 with:
+
+- `postgres.d/conf.yaml`: `dbm: true`, activity metrics, query samples for RDS PostgreSQL
+- `redisdb.d/conf.yaml`: `command_key: true`, `slowlog-max-len: 128` for ElastiCache Redis command tracking
+
+The `datadog` monitoring user in RDS is created automatically by `deploy-aws.sh` via SSM on first deploy.
+
+**Verify:**
+
+- PostgreSQL: APM → Database Monitoring → Queries → filter by `host:<stack-name>-postgres`
+- Redis: Infrastructure → Redis integration dashboard → filter by `service:kelvo-ecomm-redis`
+- APM traces that include DB queries show a "View in Database Monitoring" link
+
+---
+
+### Live Process Monitoring
+
+**Enabled in:** EC2 Datadog Agent config: `process_config.process_collection.enabled: true`
+
+**Verify:** Infrastructure → Processes → filter by the EC2 host. Shows `java`, `datadog-agent`, and all system processes with live CPU/memory.
+
+---
+
+### FinOps / Cloud Cost Optimization
+
+**Enabled via:** Resources intentionally oversized in CloudFormation for Datadog to flag:
+
+| Resource | Deployed | Ideal | Monthly savings |
+| --- | --- | --- | --- |
+| EC2 | t3.medium | t3.small | ~$15 |
+| ECS x3 | 512 CPU / 1024 MB | 256 / 512 | ~$27 |
+| RDS | db.t3.medium | db.t3.micro | ~$38 |
+| Redis | cache.t3.small | cache.t3.micro | ~$13 |
+| **Total** | | | **~$93/mo (45%)** |
+
+**Verify:** Infrastructure → Cloud Cost → Recommendations (appears after 48–72 hours of data).

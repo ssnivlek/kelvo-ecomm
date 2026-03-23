@@ -367,6 +367,8 @@ Resources:
           instances:
             - host: ${RedisCluster.RedisEndpoint.Address}
               port: ${RedisCluster.RedisEndpoint.Port}
+              command_key: true
+              slowlog-max-len: 128
               tags:
                 - env:${Environment}
                 - service:kelvo-ecomm-redis
@@ -376,7 +378,7 @@ Resources:
           systemctl restart datadog-agent
 
           # Install Java 21
-          dnf install -y java-21-amazon-corretto-headless wget
+          dnf install -y java-21-amazon-corretto-headless wget postgresql15
 
           # Datadog Java APM agent
           wget -q https://dtdg.co/latest-java-tracer -O /opt/dd-java-agent.jar
@@ -400,6 +402,7 @@ Resources:
             -Ddd.logs.injection=true \
             -Ddd.dynamic.instrumentation.enabled=true \
             -Ddd.appsec.enabled=true \
+            -Ddd.appsec.rasp.enabled=true \
             -Ddd.iast.enabled=true \
             -Ddd.appsec.sca.enabled=true \
             -Ddd.trace.analytics.enabled=true \

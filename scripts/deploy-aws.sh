@@ -248,30 +248,45 @@ $AWS_CMD cloudfront create-invalidation \
 
 cd "$PROJECT_ROOT"
 
-# ── Step: Configure DBM user on RDS ────────────────────────────
+# ── Step: Automatically create Datadog DBM user on RDS via SSM ──
 echo ""
-echo "═══ Configuring Datadog DBM user on RDS... ═══"
-echo "  RDS Endpoint: $RDS_ENDPOINT"
-echo ""
-echo "  Run the following commands to create the Datadog monitoring"
-echo "  user on RDS (requires psql or SSM connection to the EC2):"
-echo ""
-echo "  PGPASSWORD='${RDS_PASSWORD}' psql -h ${RDS_ENDPOINT} -U rumshop -d rumshop -f infrastructure/postgres-init.sql"
-echo ""
-echo "  Or via SSM on the EC2 instance:"
-echo "  aws ssm send-command --instance-ids ${EC2_INSTANCE_ID} \\"
-echo "    --document-name 'AWS-RunShellScript' \\"
-echo "    --parameters 'commands=[\"PGPASSWORD=\\\"${RDS_PASSWORD}\\\" psql -h ${RDS_ENDPOINT} -U rumshop -d rumshop <<SQL"
-echo "CREATE USER datadog WITH PASSWORD \\\"datadog\\\";"
-echo "GRANT pg_monitor TO datadog;"
-echo "GRANT SELECT ON pg_stat_database TO datadog;"
-echo "CREATE SCHEMA IF NOT EXISTS datadog;"
-echo "GRANT USAGE ON SCHEMA datadog TO datadog;"
-echo "GRANT USAGE ON SCHEMA public TO datadog;"
-echo "GRANT SELECT ON ALL TABLES IN SCHEMA public TO datadog;"
-echo "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO datadog;"
-echo "SQL"
-echo "\"]'"
+echo "═══ [8/8] Creating Datadog DBM user on RDS via SSM... ═══"
+echo "  Waiting for EC2 SSM agent to be ready (up to 5 min)..."
+
+SSM_STATUS="None"
+for i in $(seq 1 30); do
+  SSM_STATUS=$($AWS_CMD ssm describe-instance-information \
+    --filters "Key=InstanceIds,Values=${EC2_INSTANCE_ID}" \
+    --query 'InstanceInformationList[0].PingStatus' --output text 2>/dev/null || echo "None")
+  if [[ "$SSM_STATUS" == "Online" ]]; then
+    echo "  EC2 SSM agent is Online."
+    break
+  fi
+  echo "  Attempt ${i}/30: SSM status=${SSM_STATUS}. Waiting 10s..."
+  sleep 10
+done
+
+if [[ "$SSM_STATUS" != "Online" ]]; then
+  echo "  WARNING: EC2 SSM agent not online after 5 min. Skipping DBM user creation."
+  echo "  Run manually after EC2 starts: see README > Datadog DBM"
+else
+  DBM_CMD_ID=$($AWS_CMD ssm send-command \
+    --instance-ids "$EC2_INSTANCE_ID" \
+    --document-name "AWS-RunShellScript" \
+    --parameters "commands=[
+      \"PGPASSWORD='${RDS_PASSWORD}' psql -h ${RDS_ENDPOINT} -U rumshop -d rumshop -c \\\"CREATE USER datadog WITH PASSWORD 'datadog';\\\" 2>/dev/null || true\",
+      \"PGPASSWORD='${RDS_PASSWORD}' psql -h ${RDS_ENDPOINT} -U rumshop -d rumshop -c \\\"GRANT pg_monitor TO datadog;\\\"\",
+      \"PGPASSWORD='${RDS_PASSWORD}' psql -h ${RDS_ENDPOINT} -U rumshop -d rumshop -c \\\"GRANT SELECT ON pg_stat_database TO datadog;\\\"\",
+      \"PGPASSWORD='${RDS_PASSWORD}' psql -h ${RDS_ENDPOINT} -U rumshop -d rumshop -c \\\"CREATE SCHEMA IF NOT EXISTS datadog; GRANT USAGE ON SCHEMA datadog TO datadog; GRANT USAGE ON SCHEMA public TO datadog; GRANT SELECT ON ALL TABLES IN SCHEMA public TO datadog; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO datadog;\\\"\"
+    ]" \
+    --query 'Command.CommandId' --output text)
+  echo "  DBM setup command sent (ID: ${DBM_CMD_ID}). Waiting for completion..."
+  $AWS_CMD ssm wait command-executed \
+    --command-id "$DBM_CMD_ID" \
+    --instance-id "$EC2_INSTANCE_ID" 2>/dev/null \
+    && echo "  Datadog DBM user created on RDS." \
+    || echo "  WARNING: DBM command timed out. Check SSM command ${DBM_CMD_ID} in AWS console."
+fi
 echo ""
 
 # ── Done ──────────────────────────────────────────────────────
