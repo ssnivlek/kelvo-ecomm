@@ -128,6 +128,7 @@ for svc in cart auth payment; do
   IMAGE="${ECR_BASE}/${REPO}:latest"
 
   docker build \
+    --platform linux/amd64 \
     -f "${PROJECT_ROOT}/backend/nodejs-lambdas/Dockerfile.${svc}" \
     -t "$IMAGE" \
     "${PROJECT_ROOT}/backend/nodejs-lambdas/"
@@ -145,6 +146,7 @@ for svc in cart auth payment; do
   $AWS_CMD ecs update-service \
     --cluster "$ECS_CLUSTER" \
     --service "${STACK_NAME}-${svc}" \
+    --desired-count 1 \
     --force-new-deployment \
     --query 'service.serviceName' --output text
 done
@@ -252,7 +254,7 @@ REACT_APP_RECOMMENDATIONS_API=${APIGW_URL}
 REACT_APP_NOTIFICATIONS_API=${APIGW_URL}
 ENVEOF
 
-npm ci
+npm install
 npm run build
 
 echo "  Uploading to S3..."
