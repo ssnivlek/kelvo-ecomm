@@ -1,6 +1,6 @@
 # Build stage
 # eclipse-temurin without OS suffix is multi-arch (amd64 + arm64)
-FROM eclipse-temurin:17-jdk AS builder
+FROM eclipse-temurin:21-jdk AS builder
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends maven curl && \
     rm -rf /var/lib/apt/lists/*
 
 # Runtime stage
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
