@@ -26,7 +26,7 @@ E-commerce application with polyglot microservices on AWS. Full observability wi
             v                     v                        v
   +-------------------+  +------------------+  +----------------------+
   |       EC2         |  |   ECS Fargate    |  |       Lambda         |
-  |  Java 17          |  |   Node.js 20     |  |   Python 3.11        |
+  |  Java 21          |  |   Node.js 20     |  |   Python 3.11        |
   |  Spring Boot      |  |   dd-trace       |  |                      |
   |  dd-java-agent    |  |   UDS sockets    |  |   Remote Instr.      |
   |  Datadog Agent    |  |   Firelens logs  |  |   (Datadog UI)       |
@@ -56,7 +56,7 @@ E-commerce application with polyglot microservices on AWS. Full observability wi
 
 | Service | Language | AWS | Local Port | DD Service Name |
 |---------|----------|-----|------------|-----------------|
-| Orders | Java 17 (Spring Boot) | EC2 `t3.large` | 8080 | `kelvo-ecomm-order-service` |
+| Orders | Java 21 (Spring Boot) | EC2 `t3.medium` | 8080 | `kelvo-ecomm-order-service` |
 | Cart | Node.js 20 | ECS Fargate | 3001 | `kelvo-ecomm-cart` |
 | Auth | Node.js 20 | ECS Fargate | 3002 | `kelvo-ecomm-auth` |
 | Payment | Node.js 20 | ECS Fargate | 3003 | `kelvo-ecomm-payment` |
@@ -196,9 +196,8 @@ The CloudFormation template creates a dedicated VPC with public and private subn
 
 | Security Group | Allows Inbound From | Ports | Purpose |
 |----------------|---------------------|-------|---------|
-| `ALBSecurityGroup` | `0.0.0.0/0` (internet) | 80, 443 | Public access to the ALB |
+| `ALBSecurityGroup` | CloudFront prefix list (`pl-82a045eb`) | 80 | Only CloudFront edge nodes can reach the ALB |
 | `EC2SecurityGroup` | `ALBSecurityGroup` | 8080 | ALB routes to Java service |
-| `EC2SecurityGroup` | `0.0.0.0/0` | 22 | SSH access (use a key pair) |
 | `ECSSecurityGroup` | `ALBSecurityGroup` | 3001-3003 | ALB routes to Node.js services |
 | `DatabaseSecurityGroup` | `EC2SecurityGroup` | 5432 | EC2 (Java app + DD Agent) → PostgreSQL |
 | `DatabaseSecurityGroup` | `ECSSecurityGroup` | 5432 | ECS (Auth service) → PostgreSQL |
@@ -206,10 +205,13 @@ The CloudFormation template creates a dedicated VPC with public and private subn
 | `RedisSecurityGroup` | `EC2SecurityGroup` | 6379 | EC2 (DD Agent) → Redis |
 
 Key points:
+
+- The ALB only accepts traffic from **CloudFront edge IPs** (AWS managed prefix list `pl-82a045eb`) — direct internet access is blocked
 - RDS and ElastiCache are in **private subnets** — they are **not** accessible from the internet
 - The EC2 instance is in a **public subnet** because it needs the Datadog Agent to reach `datadoghq.com`
 - ECS Fargate tasks are in **private subnets** and reach the internet via the **NAT Gateway**
 - Lambda functions are **outside the VPC** entirely (no DB connection = no VPC = fast cold starts)
+- EC2 SSH access uses **AWS SSM Session Manager** — no SSH port (22) exposed to the internet
 - The Datadog Agent on EC2 connects to both RDS and ElastiCache through the security groups above
 
 ---
@@ -260,7 +262,7 @@ Resources are intentionally oversized so Datadog Cloud Cost Management recommend
 
 | Resource | Deployed | Ideal | Monthly Savings |
 |----------|----------|-------|-----------------|
-| EC2 | t3.large (2 vCPU, 8 GB) ~$60/mo | t3.small ~$15/mo | ~$45/mo |
+| EC2 | t3.medium (2 vCPU, 4 GB) ~$30/mo | t3.small ~$15/mo | ~$15/mo |
 | ECS x3 tasks | 512 CPU / 1024 MB ~$54/mo | 256/512 ~$27/mo | ~$27/mo |
 | RDS | db.t3.medium (2 vCPU, 4 GB) ~$50/mo | db.t3.micro ~$12/mo | ~$38/mo |
 | ElastiCache | cache.t3.small (1.5 GB) ~$25/mo | cache.t3.micro ~$12/mo | ~$13/mo |
@@ -597,8 +599,8 @@ cp .env.aws .env
 # 4. Enable Lambda Remote Instrumentation in the Datadog UI
 #    (see "Python APM" section above)
 
-# 5. When you're done, tear everything down:
-./scripts/teardown-aws.sh
+# 5. When you're done, tear everything down via the AWS console
+#    or: aws cloudformation delete-stack --stack-name <STACK_NAME> --region <REGION>
 ```
 
 ---
