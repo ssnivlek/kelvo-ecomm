@@ -38,8 +38,8 @@ Parameters:
     Type: String
     Default: t3.medium
     Description: >
-      t3.small  (2 vCPU,  2 GB, ~$15/mo) — right-sized for this app.
-      t3.medium (2 vCPU,  4 GB, ~$30/mo) — DEFAULT. Used for sandbox and FinOps demo.
+      t3.small  (2 vCPU,  2 GB, ~$15/mo) - right-sized for this app.
+      t3.medium (2 vCPU,  4 GB, ~$30/mo) - DEFAULT. Used for sandbox and FinOps demo.
     AllowedValues: [t3.small, t3.medium]
 
   FargateCpu:
@@ -232,7 +232,7 @@ Resources:
   DatabaseSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: RDS PostgreSQL — access from EC2 and ECS
+      GroupDescription: RDS PostgreSQL - access from EC2 and ECS
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - { IpProtocol: tcp, FromPort: 5432, ToPort: 5432, SourceSecurityGroupId: !Ref EC2SecurityGroup }
@@ -241,7 +241,7 @@ Resources:
   RedisSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: ElastiCache Redis — access from ECS and EC2 (Agent monitoring)
+      GroupDescription: ElastiCache Redis - access from ECS and EC2 (Agent monitoring)
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - { IpProtocol: tcp, FromPort: 6379, ToPort: 6379, SourceSecurityGroupId: !Ref ECSSecurityGroup }
