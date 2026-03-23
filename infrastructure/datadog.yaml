@@ -1,0 +1,132 @@
+# ================================================================
+# Datadog Agent — Full Configuration
+# Kelvo E-Comm / RUM-App
+# ================================================================
+# Products covered:
+#   APM · RUM · Logs · DBM · Profiling · DI
+#   ASM (App & API Protection) · RASP
+#   IAST (Runtime Code Analysis)
+#   SCA (Software Composition Analysis / SBOM)
+#   CWS (Cloud Workload Security)
+#   CSPM (Cloud Security Posture Management)
+#   Infrastructure · Process · Network Performance
+#
+# Usage (EC2 / host agent):
+#   sudo cp infrastructure/datadog.yaml /etc/datadog-agent/datadog.yaml
+#   sudo systemctl restart datadog-agent
+#
+# For Docker / ECS Fargate the same knobs are set via DD_* env vars
+# in docker-compose.yml and aws-architecture.yaml.
+# ================================================================
+
+# ── Core ────────────────────────────────────────────────────────
+api_key: "<DD_API_KEY>"           # set via env DD_API_KEY in containers
+site: "datadoghq.com"             # DD_SITE — change for EU/US3/US5/AP1
+env: "production"                 # DD_ENV
+hostname_fqdn: true
+
+# ── Logs ────────────────────────────────────────────────────────
+logs_enabled: true
+logs_config:
+  container_collect_all: true
+  auto_multi_line_detection: true
+  use_http: true                  # compressed HTTPS batching
+
+# ── APM / Tracing ───────────────────────────────────────────────
+apm_config:
+  enabled: true
+  apm_non_local_traffic: true
+  receiver_socket: /var/run/datadog/apm.socket   # UDS (same as ECS sidecar)
+
+# ── DogStatsD ───────────────────────────────────────────────────
+dogstatsd_socket: /var/run/datadog/dsd.socket
+dogstatsd_non_local_traffic: true
+
+# ── Profiling ───────────────────────────────────────────────────
+# Per-service: DD_PROFILING_ENABLED=true on each app container.
+
+# ── Dynamic Instrumentation ─────────────────────────────────────
+# Per-service: DD_DYNAMIC_INSTRUMENTATION_ENABLED=true on each app container.
+
+# ── Process Agent ───────────────────────────────────────────────
+process_config:
+  process_collection:
+    enabled: true
+  container_collection:
+    enabled: true
+
+# ── Network Performance Monitoring (NPM) ───────────────────────
+network_config:
+  enabled: true
+
+# ── Infrastructure / Live Containers ────────────────────────────
+container_collect_all: true
+
+# ================================================================
+# APPLICATION SECURITY
+# ================================================================
+
+# ── App & API Protection — ASM Threat Detection + RASP ─────────
+# Runtime blocking of SQLI, XSS, SSRF, shell injection, etc.
+# Per-service env: DD_APPSEC_ENABLED=true / DD_APPSEC_RASP_ENABLED=true
+appsec_config:
+  enabled: true
+
+# ── IAST — Runtime Code Analysis ────────────────────────────────
+# Detects code-level vulns (injection, path traversal, weak crypto…)
+# while traffic flows through the app. Zero false positives.
+# Per-service env: DD_IAST_ENABLED=true
+iast:
+  enabled: true
+
+# ── SCA — Software Composition Analysis (SBOM) ─────────────────
+# Identifies vulnerable open-source dependencies at the container
+# and host level. Agent scans images and exports an SBOM.
+# Per-service env: DD_APPSEC_SCA_ENABLED=true
+sbom:
+  enabled: true
+  container_image:
+    enabled: true
+  host:
+    enabled: true
+
+# ================================================================
+# CLOUD SECURITY
+# ================================================================
+
+# ── CWS — Cloud Workload Security ───────────────────────────────
+# Detects threats at the kernel level (file access, process spawn,
+# network activity, container escape, etc.) via eBPF rules.
+runtime_security_config:
+  enabled: true
+  network:
+    enabled: true
+  # Enable remote config for live rule updates from the Datadog UI
+  remote_configuration:
+    enabled: true
+
+# ── CSPM — Cloud Security Posture Management ────────────────────
+# Benchmarks resources against CIS, PCI-DSS, SOC 2, HIPAA.
+compliance_config:
+  enabled: true
+  # Runs host benchmarks every 20 minutes
+  check_interval: 20m
+
+# ================================================================
+# DATABASE MONITORING (DBM)
+# ================================================================
+# Configured via Autodiscovery labels on postgres/redis containers.
+# See docker-compose.yml com.datadoghq.ad.* labels.
+
+# ================================================================
+# INTEGRATIONS — Autodiscovery
+# ================================================================
+# Postgres and Redis are discovered automatically from container
+# labels in docker-compose.yml. No static config needed here.
+
+# ================================================================
+# TAGS
+# ================================================================
+tags:
+  - "project:kelvo-ecomm"
+  - "team:platform"

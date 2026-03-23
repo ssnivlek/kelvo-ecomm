@@ -1,0 +1,61 @@
+# ================================================================
+# Datadog Static Analysis (SAST) — Code Analysis Configuration
+# Kelvo E-Comm / RUM-App
+# ================================================================
+# This file enables Datadog SAST (Static Application Security
+# Testing) via Datadog Code Analysis.
+#
+# How it works:
+#   - Runs in CI (GitHub Actions, GitLab CI, etc.)
+#   - Scans source code for security vulnerabilities, secrets,
+#     and code quality issues BEFORE code is deployed.
+#   - Results appear in Datadog → Security → Code Analysis.
+#
+# To run locally:
+#   npm install -g @datadog/datadog-ci
+#   datadog-ci code-analysis run
+# ================================================================
+
+version: 1
+
+# ── Rulesets ────────────────────────────────────────────────────
+# Each ruleset maps to a language/framework. Datadog maintains
+# and updates these rulesets automatically.
+rulesets:
+  # JavaScript / TypeScript (Node.js services + React frontend)
+  - javascript-best-practices
+  - javascript-security
+  - javascript-node-security
+  - typescript-best-practices
+
+  # Python (Lambda services: search, recommendations, notifications)
+  - python-best-practices
+  - python-security
+  - python-flask                  # if any Flask usage
+  - python-django                 # if any Django usage
+
+  # Java (Order Service — Spring Boot)
+  - java-best-practices
+  - java-security
+  - java-spring
+
+  # Infrastructure as Code
+  - dockerfile-best-practices     # all service Dockerfiles
+  - docker-compose-best-practices
+
+# ── Ignore paths ────────────────────────────────────────────────
+# Exclude generated / third-party code from analysis.
+ignore-paths:
+  - "**/node_modules/**"
+  - "**/.venv/**"
+  - "**/dist/**"
+  - "**/build/**"
+  - "**/target/**"                # Java build output
+  - "**/.git/**"
+  - "docs/**"
+
+# ── Secret detection ────────────────────────────────────────────
+# Scans for hardcoded credentials, API keys, tokens, etc.
+# Complements CWS runtime secret scanning.
+secret-detection:
+  enabled: true

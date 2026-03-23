@@ -91,6 +91,17 @@ services:
       - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
       - DD_CONTAINER_EXCLUDE_LOGS=name:dd-agent
       - DD_PROCESS_AGENT_ENABLED=true
+      # ── App & API Protection (ASM + RASP) ──────────────────────
+      - DD_APPSEC_ENABLED=true
+      # ── Cloud Workload Security (CWS) ──────────────────────────
+      - DD_RUNTIME_SECURITY_CONFIG_ENABLED=true
+      - DD_RUNTIME_SECURITY_CONFIG_NETWORK_ENABLED=true
+      # ── Cloud Security Posture Management (CSPM) ───────────────
+      - DD_COMPLIANCE_CONFIG_ENABLED=true
+      # ── SCA — SBOM at container/host level ─────────────────────
+      - DD_SBOM_ENABLED=true
+      - DD_SBOM_CONTAINER_IMAGE_ENABLED=true
+      - DD_SBOM_HOST_ENABLED=true
     ports:
       - "8126:8126"
       - "8125:8125/udp"
@@ -119,6 +130,10 @@ services:
       - DD_PROFILING_ENABLED=true
       - DD_LOGS_INJECTION=${DD_LOGS_INJECTION:-true}
       - DD_DYNAMIC_INSTRUMENTATION_ENABLED=${DD_DYNAMIC_INSTRUMENTATION_ENABLED:-true}
+      - DD_APPSEC_ENABLED=${DD_APPSEC_ENABLED:-true}
+      - DD_APPSEC_RASP_ENABLED=${DD_APPSEC_RASP_ENABLED:-true}
+      - DD_IAST_ENABLED=${DD_IAST_ENABLED:-true}
+      - DD_APPSEC_SCA_ENABLED=${DD_APPSEC_SCA_ENABLED:-true}
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/rumshop
       - SPRING_DATASOURCE_USERNAME=rumshop
       - SPRING_DATASOURCE_PASSWORD=rumshop
@@ -157,6 +172,10 @@ services:
       - DD_TRACE_AGENT_URL=unix:///var/run/datadog/apm.socket
       - DD_LOGS_INJECTION=${DD_LOGS_INJECTION:-true}
       - DD_DYNAMIC_INSTRUMENTATION_ENABLED=${DD_DYNAMIC_INSTRUMENTATION_ENABLED:-true}
+      - DD_APPSEC_ENABLED=${DD_APPSEC_ENABLED:-true}
+      - DD_APPSEC_RASP_ENABLED=${DD_APPSEC_RASP_ENABLED:-true}
+      - DD_IAST_ENABLED=${DD_IAST_ENABLED:-true}
+      - DD_APPSEC_SCA_ENABLED=${DD_APPSEC_SCA_ENABLED:-true}
       - PORT=3001
       - REDIS_URL=redis://redis:6379
       - PAYMENT_SERVICE_URL=http://payment-service:3003
@@ -189,6 +208,10 @@ services:
       - DD_TRACE_AGENT_URL=unix:///var/run/datadog/apm.socket
       - DD_LOGS_INJECTION=${DD_LOGS_INJECTION:-true}
       - DD_DYNAMIC_INSTRUMENTATION_ENABLED=${DD_DYNAMIC_INSTRUMENTATION_ENABLED:-true}
+      - DD_APPSEC_ENABLED=${DD_APPSEC_ENABLED:-true}
+      - DD_APPSEC_RASP_ENABLED=${DD_APPSEC_RASP_ENABLED:-true}
+      - DD_IAST_ENABLED=${DD_IAST_ENABLED:-true}
+      - DD_APPSEC_SCA_ENABLED=${DD_APPSEC_SCA_ENABLED:-true}
       - JWT_SECRET=${JWT_SECRET:-kelvo-ecomm-local-secret-key-2024}
       - PORT=3002
       - DATABASE_URL=postgresql://rumshop:rumshop@postgres:5432/rumshop
@@ -221,6 +244,10 @@ services:
       - DD_TRACE_AGENT_URL=unix:///var/run/datadog/apm.socket
       - DD_LOGS_INJECTION=${DD_LOGS_INJECTION:-true}
       - DD_DYNAMIC_INSTRUMENTATION_ENABLED=${DD_DYNAMIC_INSTRUMENTATION_ENABLED:-true}
+      - DD_APPSEC_ENABLED=${DD_APPSEC_ENABLED:-true}
+      - DD_APPSEC_RASP_ENABLED=${DD_APPSEC_RASP_ENABLED:-true}
+      - DD_IAST_ENABLED=${DD_IAST_ENABLED:-true}
+      - DD_APPSEC_SCA_ENABLED=${DD_APPSEC_SCA_ENABLED:-true}
       - PORT=3003
       - REDIS_URL=redis://redis:6379
     ports:
@@ -252,6 +279,10 @@ services:
       - DD_TRACE_AGENT_URL=unix:///var/run/datadog/apm.socket
       - DD_LOGS_INJECTION=${DD_LOGS_INJECTION:-true}
       - DD_DYNAMIC_INSTRUMENTATION_ENABLED=${DD_DYNAMIC_INSTRUMENTATION_ENABLED:-true}
+      - DD_APPSEC_ENABLED=${DD_APPSEC_ENABLED:-true}
+      - DD_APPSEC_RASP_ENABLED=${DD_APPSEC_RASP_ENABLED:-true}
+      - DD_IAST_ENABLED=${DD_IAST_ENABLED:-true}
+      - DD_APPSEC_SCA_ENABLED=${DD_APPSEC_SCA_ENABLED:-true}
       - PORT=3004
     ports:
       - "3004:3004"
@@ -279,6 +310,10 @@ services:
       - DD_TRACE_AGENT_URL=unix:///var/run/datadog/apm.socket
       - DD_LOGS_INJECTION=${DD_LOGS_INJECTION:-true}
       - DD_DYNAMIC_INSTRUMENTATION_ENABLED=${DD_DYNAMIC_INSTRUMENTATION_ENABLED:-true}
+      - DD_APPSEC_ENABLED=${DD_APPSEC_ENABLED:-true}
+      - DD_APPSEC_RASP_ENABLED=${DD_APPSEC_RASP_ENABLED:-true}
+      - DD_IAST_ENABLED=${DD_IAST_ENABLED:-true}
+      - DD_APPSEC_SCA_ENABLED=${DD_APPSEC_SCA_ENABLED:-true}
       - PORT=3005
     ports:
       - "3005:3005"
@@ -306,6 +341,10 @@ services:
       - DD_TRACE_AGENT_URL=unix:///var/run/datadog/apm.socket
       - DD_LOGS_INJECTION=${DD_LOGS_INJECTION:-true}
       - DD_DYNAMIC_INSTRUMENTATION_ENABLED=${DD_DYNAMIC_INSTRUMENTATION_ENABLED:-true}
+      - DD_APPSEC_ENABLED=${DD_APPSEC_ENABLED:-true}
+      - DD_APPSEC_RASP_ENABLED=${DD_APPSEC_RASP_ENABLED:-true}
+      - DD_IAST_ENABLED=${DD_IAST_ENABLED:-true}
+      - DD_APPSEC_SCA_ENABLED=${DD_APPSEC_SCA_ENABLED:-true}
       - PORT=3006
     ports:
       - "3006:3006"
