@@ -254,7 +254,7 @@ REACT_APP_RECOMMENDATIONS_API=${APIGW_URL}
 REACT_APP_NOTIFICATIONS_API=${APIGW_URL}
 ENVEOF
 
-npm install
+npm install --legacy-peer-deps
 npm run build
 
 echo "  Uploading to S3..."
