@@ -206,11 +206,10 @@ Resources:
   ALBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: ALB - HTTP/HTTPS from internet
+      GroupDescription: ALB - HTTP from CloudFront only
       VpcId: !Ref VPC
       SecurityGroupIngress:
-        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0 }
-        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0 }
+        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, SourcePrefixListId: pl-82a045eb }
 
   EC2SecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -376,8 +375,8 @@ Resources:
 
           systemctl restart datadog-agent
 
-          # Install Java 17
-          dnf install -y java-17-amazon-corretto-headless wget
+          # Install Java 21
+          dnf install -y java-21-amazon-corretto-headless wget
 
           # Datadog Java APM agent
           wget -q https://dtdg.co/latest-java-tracer -O /opt/dd-java-agent.jar
@@ -437,12 +436,12 @@ Resources:
       LoadBalancerArn: !Ref ALB
       Port: 80
       Protocol: HTTP
-      DefaultAction:
-        Type: fixed-response
-        FixedResponseConfig:
-          ContentType: application/json
-          MessageBody: '{"service":"rumshop-alb","status":"ok"}'
-          StatusCode: '200'
+      DefaultActions:
+        - Type: fixed-response
+          FixedResponseConfig:
+            ContentType: application/json
+            MessageBody: '{"service":"rumshop-alb","status":"ok"}'
+            StatusCode: '200'
 
   OrderTG:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -703,7 +702,7 @@ Resources:
       ServiceName: !Sub '${AWS::StackName}-cart'
       Cluster: !Ref ECSCluster
       TaskDefinition: !Ref CartTask
-      DesiredCount: 1
+      DesiredCount: 0
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -789,7 +788,7 @@ Resources:
       ServiceName: !Sub '${AWS::StackName}-auth'
       Cluster: !Ref ECSCluster
       TaskDefinition: !Ref AuthTask
-      DesiredCount: 1
+      DesiredCount: 0
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -874,7 +873,7 @@ Resources:
       ServiceName: !Sub '${AWS::StackName}-payment'
       Cluster: !Ref ECSCluster
       TaskDefinition: !Ref PaymentTask
-      DesiredCount: 1
+      DesiredCount: 0
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
