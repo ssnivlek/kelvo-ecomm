@@ -922,8 +922,12 @@ Resources:
       Role: !GetAtt LambdaRole.Arn
       MemorySize: 256
       Timeout: 30
+      Layers:
+        - !Sub 'arn:aws:lambda:${AWS::Region}:464622532012:layer:Datadog-Python311:122'
       Environment:
         Variables:
+          DD_API_KEY: !Ref DatadogApiKey
+          DD_SITE: !Ref DatadogSite
           DD_SERVICE: kelvo-ecomm-search
           DD_ENV: !Ref Environment
           DD_VERSION: '1.0.0'
@@ -975,8 +979,12 @@ Resources:
       Role: !GetAtt LambdaRole.Arn
       MemorySize: 256
       Timeout: 30
+      Layers:
+        - !Sub 'arn:aws:lambda:${AWS::Region}:464622532012:layer:Datadog-Python311:122'
       Environment:
         Variables:
+          DD_API_KEY: !Ref DatadogApiKey
+          DD_SITE: !Ref DatadogSite
           DD_SERVICE: kelvo-ecomm-recommendations
           DD_ENV: !Ref Environment
           DD_VERSION: '1.0.0'
@@ -1028,8 +1036,12 @@ Resources:
       Role: !GetAtt LambdaRole.Arn
       MemorySize: 256
       Timeout: 30
+      Layers:
+        - !Sub 'arn:aws:lambda:${AWS::Region}:464622532012:layer:Datadog-Python311:122'
       Environment:
         Variables:
+          DD_API_KEY: !Ref DatadogApiKey
+          DD_SITE: !Ref DatadogSite
           DD_SERVICE: kelvo-ecomm-notifications
           DD_ENV: !Ref Environment
           DD_VERSION: '1.0.0'
@@ -1108,13 +1120,28 @@ Resources:
             DomainName: !GetAtt FrontendBucket.RegionalDomainName
             OriginAccessControlId: !Ref FrontendOAC
             S3OriginConfig: { OriginAccessIdentity: '' }
+          - Id: ALB
+            DomainName: !GetAtt ALB.DNSName
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only
+              HTTPPort: 80
+        CacheBehaviors:
+          - PathPattern: /api/*
+            TargetOriginId: ALB
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT]
+            CachedMethods: [GET, HEAD, OPTIONS]
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+            OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac
         DefaultCacheBehavior:
           ViewerProtocolPolicy: redirect-to-https
           TargetOriginId: S3
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
         CustomErrorResponses:
-          - { ErrorCode: 404, ResponseCode: 200, ResponsePagePath: /index.html }
-          - { ErrorCode: 403, ResponseCode: 200, ResponsePagePath: /index.html }
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 0
 
   FrontendBucketPolicy:
     Type: AWS::S3::BucketPolicy

@@ -97,8 +97,8 @@ def _handle_options() -> dict[str, Any]:
 def _handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     """Main Lambda handler with routing."""
     try:
-        path = event.get("path", "")
-        http_method = event.get("httpMethod", "GET")
+        path = event.get("rawPath") or event.get("path", "")
+        http_method = (event.get("requestContext", {}).get("http", {}).get("method") or event.get("httpMethod", "GET"))
 
         if http_method == "OPTIONS":
             return _handle_options()
