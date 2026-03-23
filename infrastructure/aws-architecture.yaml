@@ -38,10 +38,9 @@ Parameters:
     Type: String
     Default: t3.medium
     Description: >
-      t3.small  (2 vCPU,  2 GB, ~$15/mo) — right-sized for this app. DEFAULT for sandbox.
-      t3.medium (2 vCPU,  4 GB, ~$30/mo) — mild buffer, fine for staging.
-      t3.large  (2 vCPU,  8 GB, ~$60/mo) — intentionally oversized for Datadog FinOps demo.
-    AllowedValues: [t3.small, t3.medium, t3.large, m5.large, c5.large]
+      t3.small  (2 vCPU,  2 GB, ~$15/mo) — right-sized for this app.
+      t3.medium (2 vCPU,  4 GB, ~$30/mo) — DEFAULT. Used for sandbox and FinOps demo.
+    AllowedValues: [t3.small, t3.medium]
 
   FargateCpu:
     Type: String
