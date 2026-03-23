@@ -1,12 +1,14 @@
 # Kelvo E-Comm
 
-E-commerce application with polyglot microservices on AWS. Full observability with **Datadog RUM**, **APM**, **DBM**, and **FinOps** right-sizing recommendations.
+E-commerce application with polyglot microservices on AWS. Full observability with **Datadog RUM**, **APM**, **DBM**, **ASM**, **RASP**, **IAST**, **SCA**, **SAST**, **Profiling**, and **FinOps** right-sizing recommendations.
+
+**[📄 Full documentation — GitHub Pages](https://ssnivlek.github.io/kelvo-ecomm/)**
 
 ---
 
 ## Architecture
 
-```
+```text
                 +---------------------------+
                 |    S3 + CloudFront        |
                 |    React SPA              |
@@ -55,7 +57,7 @@ E-commerce application with polyglot microservices on AWS. Full observability wi
 ## Services
 
 | Service | Language | AWS | Local Port | DD Service Name |
-|---------|----------|-----|------------|-----------------|
+| --- | --- | --- | --- | --- |
 | Orders | Java 21 (Spring Boot) | EC2 `t3.medium` | 8080 | `kelvo-ecomm-order-service` |
 | Cart | Node.js 20 | ECS Fargate | 3001 | `kelvo-ecomm-cart` |
 | Auth | Node.js 20 | ECS Fargate | 3002 | `kelvo-ecomm-auth` |
@@ -70,7 +72,7 @@ E-commerce application with polyglot microservices on AWS. Full observability wi
 ## Databases
 
 | Database | AWS Service | Local Container | Port | Used By |
-|----------|-------------|-----------------|------|---------|
+| --- | --- | --- | --- | --- |
 | PostgreSQL 16 | RDS (`db.t3.medium`) | `postgres:16-alpine` | 5432 | Order Service (products, orders), Auth Service (users) |
 | Redis 7 | ElastiCache (`cache.t3.small`) | `redis:7-alpine` | 6379 | Cart Service (sessions), Payment Service (payment intents) |
 
@@ -79,13 +81,14 @@ Python Lambda services use a static product catalog and do **not** connect to an
 ### How services connect to databases
 
 | Service | Database | Connection String |
-|---------|----------|-------------------|
+| --- | --- | --- |
 | Order Service (Java) | PostgreSQL | `jdbc:postgresql://<host>:5432/rumshop` (user: `rumshop`, password: `rumshop`) |
 | Auth Service (Node.js) | PostgreSQL | `postgresql://rumshop:rumshop@<host>:5432/rumshop` |
 | Cart Service (Node.js) | Redis | `redis://<host>:6379` |
 | Payment Service (Node.js) | Redis | `redis://<host>:6379` |
 
 Where `<host>` is:
+
 - **Local**: `localhost` (or the Docker service name `postgres` / `redis` inside Docker Compose)
 - **AWS**: The RDS endpoint (e.g. `rumshop-postgres.abc123.us-east-1.rds.amazonaws.com`) or ElastiCache endpoint (e.g. `rumshop-redis.abc123.0001.use1.cache.amazonaws.com`)
 
@@ -97,7 +100,7 @@ Where `<host>` is:
 
 All containers run on a single Docker network called `rumshop`. Services reference each other by container name:
 
-```
+```text
 +------------------------------------------------------------------+
 |  Docker Network: rumshop                                         |
 |                                                                  |
@@ -137,7 +140,7 @@ Every container exposes its port to `localhost` for direct access. Inside Docker
 
 The CloudFormation template creates a dedicated VPC with public and private subnets:
 
-```
+```text
 +-----------------------------------------------------------------------+
 |  VPC  10.0.0.0/16                                                     |
 |                                                                       |
@@ -195,7 +198,7 @@ The CloudFormation template creates a dedicated VPC with public and private subn
 ### Security Groups (who can talk to whom)
 
 | Security Group | Allows Inbound From | Ports | Purpose |
-|----------------|---------------------|-------|---------|
+| --- | --- | --- | --- |
 | `ALBSecurityGroup` | CloudFront prefix list (`pl-82a045eb`) | 80 | Only CloudFront edge nodes can reach the ALB |
 | `EC2SecurityGroup` | `ALBSecurityGroup` | 8080 | ALB routes to Java service |
 | `ECSSecurityGroup` | `ALBSecurityGroup` | 3001-3003 | ALB routes to Node.js services |
@@ -218,9 +221,10 @@ Key points:
 
 ## Databases — Setup Guide
 
-### Local (Docker Compose)
+### Local Setup (Docker Compose)
 
 Everything starts automatically with `./scripts/run-local.sh`. This brings up:
+
 - **PostgreSQL** on `localhost:5432` (database: `rumshop`, user: `rumshop`, password: `rumshop`)
 - **Redis** on `localhost:6379` (no password)
 - All backend services, pre-configured to connect to these databases
@@ -263,7 +267,7 @@ The deploy script automatically:
 Resources are intentionally oversized so Datadog Cloud Cost Management recommends downsizing:
 
 | Resource | Deployed | Ideal | Monthly Savings |
-|----------|----------|-------|-----------------|
+| --- | --- | --- | --- |
 | EC2 | t3.medium (2 vCPU, 4 GB) ~$30/mo | t3.small ~$15/mo | ~$15/mo |
 | ECS x3 tasks | 512 CPU / 1024 MB ~$54/mo | 256/512 ~$27/mo | ~$27/mo |
 | RDS | db.t3.medium (2 vCPU, 4 GB) ~$50/mo | db.t3.micro ~$12/mo | ~$38/mo |
@@ -309,7 +313,7 @@ See [Connect RUM and Traces](https://docs.datadoghq.com/real_user_monitoring/pla
 
 The Datadog Agent is installed on the EC2 instance during boot (CloudFormation UserData). The Java app starts with:
 
-```
+```bash
 java -javaagent:/opt/dd-java-agent.jar \
   -Ddd.service=kelvo-ecomm-order-service \
   -Ddd.env=production \
@@ -327,6 +331,7 @@ java -javaagent:/opt/dd-java-agent.jar \
 ### Node.js APM (ECS Fargate)
 
 Each ECS task has two containers:
+
 1. **App container**: starts with `NODE_OPTIONS='--require=dd-trace/init' node server.js`
 2. **Datadog Agent sidecar**: communicates via Unix Domain Socket (UDS) at `/var/run/datadog/apm.socket`
 
@@ -367,7 +372,7 @@ DBM gives you visibility into query performance, slow queries, explain plans, ac
 
 The Datadog **Agent** connects directly to the database and runs read-only queries to collect metrics and query samples. It does **not** go through your application — it's a separate monitoring connection.
 
-```
+```text
 ┌─ Datadog Agent ────────────────────────────────────┐
 │                                                     │
 │  postgres.d/conf.yaml → connects to PostgreSQL     │
@@ -535,6 +540,7 @@ Once everything is running, go to:
 DBM data also appears correlated with APM traces: when you view a trace that includes a database query, you can click through to see the explain plan and query performance history.
 
 Docs:
+
 - [PostgreSQL DBM Setup](https://docs.datadoghq.com/database_monitoring/setup_postgres/selfhosted/)
 - [PostgreSQL DBM on RDS](https://docs.datadoghq.com/database_monitoring/setup_postgres/rds/)
 - [Redis Integration](https://docs.datadoghq.com/integrations/redisdb/)
@@ -569,15 +575,15 @@ cp .env.local .env
 ```
 
 | What | URL |
-|------|-----|
-| Frontend | http://localhost:3000 |
-| Swagger UI (API docs) | http://localhost:8888 |
-| Order Service (Java) | http://localhost:8080/api/products |
-| Cart Service | http://localhost:3001/health |
-| Auth Service | http://localhost:3002/health |
-| Payment Service | http://localhost:3003/health |
-| Search (Python) | http://localhost:3004/api/search?q=shirt |
-| Recommendations | http://localhost:3005/api/recommendations?productId=1 |
+| --- | --- |
+| Frontend | <http://localhost:3000> |
+| Swagger UI (API docs) | <http://localhost:8888> |
+| Order Service (Java) | <http://localhost:8080/api/products> |
+| Cart Service | <http://localhost:3001/health> |
+| Auth Service | <http://localhost:3002/health> |
+| Payment Service | <http://localhost:3003/health> |
+| Search (Python) | <http://localhost:3004/api/search?q=shirt> |
+| Recommendations | <http://localhost:3005/api/recommendations?productId=1> |
 | PostgreSQL | `localhost:5432` (user: `rumshop`, password: `rumshop`) |
 | Redis | `localhost:6379` |
 
@@ -605,11 +611,11 @@ aws cloudformation delete-stack --stack-name rumshop-production --region <AWS_RE
 
 ## Environment Variables
 
-### How it works
+### Template Files
 
 There are **three** template files in the repo. All of them have placeholder values. None of them contain real secrets.
 
-```
+```text
 .env.local      ← template for local development (Docker Compose)
 .env.aws        ← template for AWS deployment
 .env.example    ← minimal quick reference
@@ -634,7 +640,7 @@ Both `.env` and `.env.deploy` are **git-ignored** — your secrets never get com
 ### Which file has what
 
 | File | Git tracked? | Contains secrets? | Used by |
-|------|:------------:|:-----------------:|---------|
+| --- | :---: | :---: | --- |
 | `.env.local` | Yes | No (placeholders only) | Template — copy to `.env` for local dev |
 | `.env.aws` | Yes | No (placeholders only) | Template — copy to `.env.deploy` for AWS deploy |
 | `.env.example` | Yes | No (placeholders only) | Minimal quick reference |
@@ -646,7 +652,7 @@ Both `.env` and `.env.deploy` are **git-ignored** — your secrets never get com
 **Datadog (required for both local and AWS):**
 
 | Variable | Where to get it |
-|----------|-----------------|
+| --- | --- |
 | `DD_API_KEY` | [Organization Settings > API Keys](https://app.datadoghq.com/organization-settings/api-keys) |
 | `DD_APP_KEY` | [Organization Settings > Application Keys](https://app.datadoghq.com/organization-settings/application-keys) |
 | `REACT_APP_DD_APPLICATION_ID` | [Digital Experience > RUM > your app](https://app.datadoghq.com/rum/application/create) |
@@ -658,7 +664,7 @@ The RUM values use the `REACT_APP_DD_` prefix because React requires it to injec
 **AWS-only (only needed in `.env.aws`):**
 
 | Variable | What it is |
-|----------|------------|
+| --- | --- |
 | `AWS_REGION` | AWS region to deploy to (e.g. `us-east-1`) |
 | `AWS_ACCOUNT_ID` | Your 12-digit AWS account ID (find it in the AWS console top-right menu) |
 | `EC2_KEY_PAIR_NAME` | Name of an existing EC2 key pair ([create one here](https://console.aws.amazon.com/ec2/home#KeyPairs:)). Regular access uses SSM Session Manager — no SSH port is open. |
@@ -671,7 +677,7 @@ The RUM values use the `REACT_APP_DD_` prefix because React requires it to injec
 
 ## API Reference
 
-Full OpenAPI 3.0 spec: [`docs/openapi.yaml`](docs/openapi.yaml) — Swagger UI at http://localhost:8888 when running Docker Compose.
+Full OpenAPI 3.0 spec: [`docs/openapi.yaml`](docs/openapi.yaml) — Swagger UI at <http://localhost:8888> when running Docker Compose.
 
 Curl examples: [`docs/api-examples.sh`](docs/api-examples.sh)
 
@@ -710,7 +716,7 @@ Curl examples: [`docs/api-examples.sh`](docs/api-examples.sh)
 Test discount coupons in the cart drawer:
 
 | Code | Effect |
-|------|--------|
+| --- | --- |
 | `KELVO10` | 10% off your order (works) |
 | `KELVO25` | 25% off your order (works) |
 | `WELCOME5` | 5% welcome discount (works) |
