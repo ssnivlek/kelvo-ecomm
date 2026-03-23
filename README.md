@@ -144,7 +144,7 @@ The CloudFormation template creates a dedicated VPC with public and private subn
 |  +-- PUBLIC SUBNETS  10.0.1.0/24 (AZ-a)  10.0.2.0/24 (AZ-b) -----+ |
 |  |                                                                  | |
 |  |  +---------------------+     +--------------------------------+ | |
-|  |  |  ALB  :80           |     |  EC2  t3.large                 | | |
+|  |  |  ALB  :80           |     |  EC2  t3.medium                | | |
 |  |  |                     |     |                                | | |
 |  |  |  /api/products  ----+---->|  Java Order Service  :8080     | | |
 |  |  |  /api/orders    ----+---->|                                | | |
@@ -294,6 +294,7 @@ datadogRum.init({
   allowedTracingUrls: [
     { match: /^http:\/\/localhost/, propagatorTypes: ['datadog', 'tracecontext'] },
     { match: (url) => url.includes('.amazonaws.com'), propagatorTypes: ['datadog', 'tracecontext'] },
+    { match: (url) => url.includes('.cloudfront.net'), propagatorTypes: ['datadog', 'tracecontext'] },
   ],
 });
 ```
@@ -409,8 +410,8 @@ $$ LANGUAGE 'plpgsql' RETURNS NULL ON NULL INPUT SECURITY DEFINER;
 **AWS setup (RDS)**: After `deploy-aws.sh` finishes, connect to the RDS instance from the EC2 host and run the script:
 
 ```bash
-# SSH into the EC2 instance (get the IP from the deploy output)
-ssh -i your-keypair.pem ec2-user@<EC2_PUBLIC_IP>
+# Connect to the EC2 instance via SSM Session Manager (no SSH key needed)
+aws ssm start-session --target <EC2_INSTANCE_ID> --region <AWS_REGION>
 
 # Install psql
 sudo dnf install -y postgresql16
@@ -441,7 +442,7 @@ END;
 "
 ```
 
-Replace `<RDS_ENDPOINT>` with the value from the deploy output (e.g. `rumshop-postgres.abc123.us-east-1.rds.amazonaws.com`) and `<RDS_PASSWORD>` with the password you set in `.env.aws`.
+Replace `<EC2_INSTANCE_ID>` with the value from the deploy output, `<RDS_ENDPOINT>` with the RDS endpoint, and `<RDS_PASSWORD>` with the password you set in `.env.deploy`.
 
 **Verify it works:**
 
@@ -586,9 +587,9 @@ cp .env.local .env
 Prerequisites: [AWS CLI](https://aws.amazon.com/cli/) installed and configured (`aws configure`).
 
 ```bash
-# 1. Copy and fill in the AWS environment file
-cp .env.aws .env
-# Edit .env: set ALL <YOUR_...> values (see "Environment Variables" below)
+# 1. Create your secrets file (git-ignored — never committed)
+cp .env.aws .env.deploy
+# Edit .env.deploy: set ALL <YOUR_...> values (see "Environment Variables" below)
 
 # 2. Deploy (takes ~15-20 minutes the first time)
 ./scripts/deploy-aws.sh
@@ -609,7 +610,7 @@ cp .env.aws .env
 
 ### How it works
 
-There are **three** env files in the repo. All of them are **templates** with placeholder values. None of them contain real secrets.
+There are **three** template files in the repo. All of them have placeholder values. None of them contain real secrets.
 
 ```
 .env.local      ← template for local development (Docker Compose)
@@ -622,23 +623,26 @@ To use them:
 ```bash
 # For local development:
 cp .env.local .env
+# Edit .env — replace all <YOUR_...> values
 
 # For AWS deployment:
-cp .env.aws .env
+cp .env.aws .env.deploy
+# Edit .env.deploy — replace all <YOUR_...> values
 ```
 
-Then open `.env` and replace all `<YOUR_...>` placeholders with your real values. The `.env` file is **git-ignored** — your secrets never get committed.
+Both `.env` and `.env.deploy` are **git-ignored** — your secrets never get committed.
 
-Docker Compose, `run-local.sh`, and `deploy-aws.sh` all read from `.env` in the project root automatically.
+`run-local.sh` and Docker Compose read from `.env`. `deploy-aws.sh` reads from `.env.deploy` (falls back to `.env.aws` if `.env.deploy` doesn't exist).
 
 ### Which file has what
 
 | File | Git tracked? | Contains secrets? | Used by |
 |------|:------------:|:-----------------:|---------|
 | `.env.local` | Yes | No (placeholders only) | Template — copy to `.env` for local dev |
-| `.env.aws` | Yes | No (placeholders only) | Template — copy to `.env` for AWS deploy |
+| `.env.aws` | Yes | No (placeholders only) | Template — copy to `.env.deploy` for AWS deploy |
 | `.env.example` | Yes | No (placeholders only) | Minimal quick reference |
-| `.env` | **No** (git-ignored) | **Yes** (your real values) | Docker Compose, scripts, builds |
+| `.env` | **No** (git-ignored) | **Yes** (your real values) | Docker Compose, `run-local.sh` |
+| `.env.deploy` | **No** (git-ignored) | **Yes** (your real values) | `deploy-aws.sh` |
 
 ### Variables you need to fill in
 
@@ -660,7 +664,7 @@ The RUM values use the `REACT_APP_DD_` prefix because React requires it to injec
 |----------|------------|
 | `AWS_REGION` | AWS region to deploy to (e.g. `us-east-1`) |
 | `AWS_ACCOUNT_ID` | Your 12-digit AWS account ID (find it in the AWS console top-right menu) |
-| `EC2_KEY_PAIR_NAME` | Name of an existing EC2 key pair for SSH access ([create one here](https://console.aws.amazon.com/ec2/home#KeyPairs:)) |
+| `EC2_KEY_PAIR_NAME` | Name of an existing EC2 key pair ([create one here](https://console.aws.amazon.com/ec2/home#KeyPairs:)). Regular access uses SSM Session Manager — no SSH port is open. |
 | `JWT_SECRET` | Any random string for signing auth tokens. Generate one: `openssl rand -hex 32` |
 | `RDS_PASSWORD` | Password for the `rumshop` PostgreSQL user on RDS. Minimum 8 characters. |
 
