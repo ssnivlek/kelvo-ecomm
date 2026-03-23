@@ -219,7 +219,7 @@ Resources:
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - { IpProtocol: tcp, FromPort: 8080, ToPort: 8080, SourceSecurityGroupId: !Ref ALBSecurityGroup }
-        - { IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: 0.0.0.0/0 }
+        # SSH removed — use SSM Session Manager (AmazonSSMManagedInstanceCore is attached)
 
   ECSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -916,6 +916,10 @@ Resources:
       FunctionName: !Sub '${AWS::StackName}-search'
       Runtime: python3.11
       Handler: search/handler.handler
+      Code:
+        ZipFile: |
+          def handler(event, context):
+            return {'statusCode': 200, 'body': 'initializing'}
       Role: !GetAtt LambdaRole.Arn
       MemorySize: 256
       Timeout: 30
@@ -965,6 +969,10 @@ Resources:
       FunctionName: !Sub '${AWS::StackName}-recommendations'
       Runtime: python3.11
       Handler: recommendations/handler.handler
+      Code:
+        ZipFile: |
+          def handler(event, context):
+            return {'statusCode': 200, 'body': 'initializing'}
       Role: !GetAtt LambdaRole.Arn
       MemorySize: 256
       Timeout: 30
@@ -1014,6 +1022,10 @@ Resources:
       FunctionName: !Sub '${AWS::StackName}-notifications'
       Runtime: python3.11
       Handler: notifications/handler.handler
+      Code:
+        ZipFile: |
+          def handler(event, context):
+            return {'statusCode': 200, 'body': 'initializing'}
       Role: !GetAtt LambdaRole.Arn
       MemorySize: 256
       Timeout: 30
