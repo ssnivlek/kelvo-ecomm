@@ -67,8 +67,6 @@ $AWS_CMD cloudformation deploy \
     Environment="${ENVIRONMENT:-production}" \
     DatadogApiKey="${DD_API_KEY}" \
     DatadogAppKey="${DD_APP_KEY}" \
-    DatadogRumApplicationId="${REACT_APP_DD_APPLICATION_ID}" \
-    DatadogRumClientToken="${REACT_APP_DD_CLIENT_TOKEN}" \
     DatadogSite="${DD_SITE}" \
     EC2KeyPairName="${EC2_KEY_PAIR_NAME}" \
     EC2InstanceType="${EC2_INSTANCE_TYPE}" \
