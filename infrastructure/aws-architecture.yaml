@@ -1189,9 +1189,7 @@ Outputs:
       RDS: ${RDSInstanceClass} (ideal db.t3.micro, ~$38/mo savings) |
       ElastiCache: ${ElastiCacheNodeType} (ideal cache.t3.micro, ~$13/mo savings) |
       Total waste: ~$123/mo
-  LambdaRemoteInstrumentation:
+  LambdaInstrumentation:
     Value: !Sub >
-      Lambda functions deployed WITHOUT Datadog layers.
-      Go to Datadog > APM > Service Setup > Serverless > Remote Instrumentation
-      to enable region ${AWS::Region} and select functions:
-      ${AWS::StackName}-search, ${AWS::StackName}-recommendations, ${AWS::StackName}-notifications
+      Lambda functions instrumented with Datadog-Python311 layer (DD_API_KEY injected).
+      Functions: ${AWS::StackName}-search, ${AWS::StackName}-recommendations, ${AWS::StackName}-notifications
