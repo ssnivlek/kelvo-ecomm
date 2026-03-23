@@ -11,14 +11,13 @@ const net = require('net');
 const { success, error, created, CORS_HEADERS } = require('../shared/responses');
 const { getUserByEmail, createUser } = require('../shared/postgres');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'kelvo-ecomm-secret-key-2024';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('[AUTH] JWT_SECRET env var is required and was not set');
+}
 const SMTP_HOST = process.env.SMTP_HOST || 'localhost';
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || '1025', 10);
 const SMTP_FROM = process.env.SMTP_FROM || 'noreply@kelvo-ecomm.com';
-
-if (JWT_SECRET === 'kelvo-ecomm-secret-key-2024') {
-  logger.warn('[AUTH] WARNING: Using default JWT_SECRET — set a custom JWT_SECRET env var in production');
-}
 const JWT_EXPIRY = '24h';
 
 function hashPassword(password) {

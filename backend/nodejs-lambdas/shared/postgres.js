@@ -12,9 +12,12 @@ const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://rumshop:rumshop@l
 
 const pool = new Pool({
   connectionString: DATABASE_URL,
+  ssl: DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false },
   max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
+  statement_timeout: 10000,
+  query_timeout: 10000,
 });
 
 pool.on('error', (err) => logger.error('[PostgreSQL] Pool error', { error: err.message }));
