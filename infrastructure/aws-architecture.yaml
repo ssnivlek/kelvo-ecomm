@@ -36,7 +36,7 @@ Parameters:
 
   EC2InstanceType:
     Type: String
-    Default: t3.small
+    Default: t3.medium
     Description: >
       t3.small  (2 vCPU,  2 GB, ~$15/mo) — right-sized for this app. DEFAULT for sandbox.
       t3.medium (2 vCPU,  4 GB, ~$30/mo) — mild buffer, fine for staging.
